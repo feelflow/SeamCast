@@ -218,6 +218,9 @@ $('toggle-scoreboard').addEventListener('click', () => {
 $('new-pitcher').addEventListener('click', () => {
   if (confirm('Pitchzähler beider Mannschaften auf 0 setzen?')) act({ type: 'newPitcher' });
 });
+$('new-game').addEventListener('click', () => {
+  if (confirm('Neues Spiel starten? Spielstand, Inning, Count, Bases und Pitchcount werden zurückgesetzt (Teams und Regeln bleiben). Mit „Rückgängig“ lässt es sich zurückholen.')) act({ type: 'newGame' });
+});
 $('rules').addEventListener('change', (event) => act({ type: 'setRules', rulesId: event.target.value }));
 
 for (const side of ['away', 'home']) {

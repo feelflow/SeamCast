@@ -1,5 +1,5 @@
-import { RULE_PROFILES, isRuleProfileId } from './rules.js';
-import { battingSide, fieldingSide, type Bases, type GameState, type Side } from './state.js';
+import { RULE_PROFILES, isRuleProfileId, type RuleProfileId } from './rules.js';
+import { battingSide, createGame, fieldingSide, type Bases, type GameState, type Side } from './state.js';
 
 /**
  * Alle Eingaben des Bedieners. Der Spielstand ändert sich ausschließlich
@@ -30,6 +30,8 @@ export type Action =
   | { type: 'nextHalf' }
   /** Pitcherwechsel: Pitchcount der Feldmannschaft auf 0 */
   | { type: 'newPitcher' }
+  /** Neues Spiel: Spielstand, Inning, Count, Bases und Pitchcounts zurück; Teams und Regeln bleiben */
+  | { type: 'newGame' }
   | { type: 'adjustPitches'; side: Side; delta: number }
   | { type: 'setTeam'; side: Side; name: string; short: string }
   | { type: 'setRules'; rulesId: string };
@@ -153,6 +155,10 @@ export function reduce(state: GameState, action: Action): GameState {
     }
     case 'nextHalf':
       return endHalf(state);
+    case 'newGame': {
+      const fresh = createGame(state.rules.id as RuleProfileId);
+      return { ...fresh, teams: state.teams };
+    }
     case 'newPitcher': {
       const side = fieldingSide(state);
       return { ...state, pitches: { ...state.pitches, [side]: 0 } };

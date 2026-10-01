@@ -86,6 +86,26 @@ describe('Treffer mit Läufer-Auswahl', () => {
   });
 });
 
+describe('Neues Spiel', () => {
+  it('setzt alles zurück, behält aber Teams und Regeln', () => {
+    const start = run([
+      { type: 'setTeam', side: 'home', name: 'Heideköpfe', short: 'HEI' },
+      { type: 'setRules', rulesId: 'softball7' },
+      { type: 'hit', bases: 4 },
+      { type: 'nextHalf' },
+      { type: 'strike' },
+    ]);
+    const state = run([{ type: 'newGame' }], start);
+    expect(state.score).toEqual({ away: 0, home: 0 });
+    expect(state.inning).toBe(1);
+    expect(state.half).toBe('top');
+    expect(state.pitches).toEqual({ away: 0, home: 0 });
+    expect(state.strikes).toBe(0);
+    expect(state.teams.home.short).toBe('HEI');
+    expect(state.rules.id).toBe('softball7');
+  });
+});
+
 describe('Treffer', () => {
   it('Single setzt den Schlagmann auf 1B und rückt Läufer eine Base vor', () => {
     const start = run([{ type: 'setBases', bases: [true, false, true] }]);

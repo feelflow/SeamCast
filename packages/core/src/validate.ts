@@ -19,6 +19,7 @@ const SIMPLE_ACTIONS = [
   'newBatter',
   'nextHalf',
   'newPitcher',
+  'newGame',
 ] as const;
 type SimpleAction = (typeof SIMPLE_ACTIONS)[number];
 
