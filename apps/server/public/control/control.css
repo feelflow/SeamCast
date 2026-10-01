@@ -52,3 +52,11 @@ input, select { font: inherit; color: var(--text); background: #fff; border: 1px
 .hint { color: var(--muted); font-size: 13px; }
 code { background: var(--btn); padding: 2px 6px; border-radius: 4px; }
 [hidden] { display: none !important; }
+
+#runners { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); }
+#runners h3 { margin: 0 0 8px; font-size: 14px; }
+.runner-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+.runner-row > span { width: 34px; font-weight: 700; }
+.runner-row button { flex: 1; padding: 8px 4px; }
+.runner-row button[aria-pressed='true'] { background: var(--accent); border-color: var(--accent); color: var(--accent-text); font-weight: 700; }
+#runners-error { color: var(--danger); }

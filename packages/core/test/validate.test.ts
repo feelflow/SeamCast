@@ -25,6 +25,17 @@ describe('parseAction', () => {
     expect(parseAction({ type: 'setRules', rulesId: 'cricket' })).toBeNull();
   });
 
+  it('prüft die Läufer-Auswahl bei Treffern', () => {
+    expect(parseAction({ type: 'hit', bases: 2, runners: [0, 1, 2] })).toEqual({
+      type: 'hit',
+      bases: 2,
+      runners: [0, 1, 2],
+    });
+    expect(parseAction({ type: 'hit', bases: 2, runners: [0, 1] })).toBeNull();
+    expect(parseAction({ type: 'hit', bases: 2, runners: [0, 9, 0] })).toBeNull();
+    expect(parseAction({ type: 'hit', bases: 2, runners: 'x' })).toBeNull();
+  });
+
   it('weist Unsinn ab', () => {
     expect(parseAction(null)).toBeNull();
     expect(parseAction('ball')).toBeNull();

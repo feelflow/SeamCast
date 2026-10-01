@@ -36,10 +36,15 @@ export function parseAction(input: unknown): Action | null {
   if (isSimpleAction(type)) return { type };
 
   switch (type) {
-    case 'hit':
-      return input.bases === 1 || input.bases === 2 || input.bases === 3 || input.bases === 4
-        ? { type, bases: input.bases }
-        : null;
+    case 'hit': {
+      const bases = input.bases;
+      if (bases !== 1 && bases !== 2 && bases !== 3 && bases !== 4) return null;
+      if (input.runners === undefined) return { type, bases };
+      const r = input.runners;
+      if (!Array.isArray(r) || r.length !== 3 || !r.every((n) => isInt(n, 0, 4))) return null;
+      const runners: [number, number, number] = [r[0] as number, r[1] as number, r[2] as number];
+      return { type, bases, runners };
+    }
     case 'setBases': {
       const bases = input.bases;
       if (

@@ -21,6 +21,8 @@ function showError(text) {
 
 function render(msg) {
   last = msg;
+  // Hat sich die Lage auf den Bases geändert (Undo, anderer Bediener), gilt die offene Auswahl nicht mehr.
+  if (pending && pending.sig !== JSON.stringify(msg.game.bases)) cancelHit();
   const g = msg.game;
   $('sum-score').textContent = `${g.teams.away.short} ${g.score.away} : ${g.score.home} ${g.teams.home.short}`;
   const dots = g.half === 'top' ? '▲' : '▼';
@@ -85,6 +87,85 @@ function connect() {
   ws.addEventListener('error', () => ws.close());
 }
 
+// --- Treffer mit Läufer-Auswahl ---------------------------------------------
+const HIT_NAMES = { 1: 'Single', 2: 'Double', 3: 'Triple', 4: 'Homerun' };
+const BASE_NAMES = ['1B', '2B', '3B'];
+let pending = null; // { bases, advance: [a1, a2, a3] }
+
+function targetLabel(from, advance) {
+  const target = from + advance;
+  if (advance === 0) return 'bleibt';
+  return target >= 4 ? 'Run' : `→ ${BASE_NAMES[target - 1]}`;
+}
+
+function startHit(bases) {
+  if (!last) return;
+  const occupied = last.game.bases;
+  // Ohne Läufer oder beim Homerun gibt es nichts zu entscheiden.
+  if (bases === 4 || !occupied.some(Boolean)) {
+    cancelHit();
+    act({ type: 'hit', bases });
+    return;
+  }
+  pending = { sig: JSON.stringify(occupied), bases, advance: [0, 1, 2].map((i) => Math.min(bases, 3 - i)) };
+  renderRunners();
+}
+
+function cancelHit() {
+  pending = null;
+  $('runners').hidden = true;
+}
+
+function collision() {
+  const occupied = last.game.bases;
+  const ends = [pending.bases];
+  pending.advance.forEach((a, i) => occupied[i] && ends.push(i + 1 + a));
+  const onField = ends.filter((n) => n < 4);
+  return new Set(onField).size !== onField.length;
+}
+
+function renderRunners() {
+  const occupied = last.game.bases;
+  $('runners-title').textContent = `${HIT_NAMES[pending.bases]}: Wohin kommen die Läufer?`;
+  const rows = $('runners-rows');
+  rows.replaceChildren();
+  occupied.forEach((on, i) => {
+    if (!on) return;
+    const row = document.createElement('div');
+    row.className = 'runner-row';
+    const label = document.createElement('span');
+    label.textContent = BASE_NAMES[i];
+    row.append(label);
+    for (let a = 0; a <= 3 - i; a++) {
+      const b = document.createElement('button');
+      b.textContent = targetLabel(i + 1, a);
+      b.setAttribute('aria-pressed', String(pending.advance[i] === a));
+      b.addEventListener('click', () => {
+        pending.advance[i] = a;
+        renderRunners();
+      });
+      row.append(b);
+    }
+    rows.append(row);
+  });
+  const bad = collision();
+  $('runners-error').hidden = !bad;
+  $('runners-ok').disabled = bad;
+  $('runners').hidden = false;
+}
+
+function confirmHit() {
+  if (!pending || collision()) return;
+  act({ type: 'hit', bases: pending.bases, runners: pending.advance });
+  cancelHit();
+}
+
+document.querySelectorAll('button[data-hit]').forEach((button) =>
+  button.addEventListener('click', () => startHit(Number(button.dataset.hit))),
+);
+$('runners-ok').addEventListener('click', confirmHit);
+$('runners-cancel').addEventListener('click', cancelHit);
+
 document.addEventListener('click', (event) => {
   const button = event.target.closest('button[data-action]');
   if (button) act(JSON.parse(button.dataset.action));
@@ -145,9 +226,13 @@ document.addEventListener('keydown', (event) => {
   else if (key === 'f') act({ type: 'foul' });
   else if (key === 'o') act({ type: 'out' });
   else if (key === 'n') act({ type: 'newBatter' });
-  else if (key === 'h') act({ type: 'hit', bases: 1 });
-  else if (['1', '2', '3', '4'].includes(key)) act({ type: 'hit', bases: Number(key) });
-  else if (key === 'escape') send({ type: 'hideAll' });
+  else if (key === 'h') startHit(1);
+  else if (['1', '2', '3', '4'].includes(key)) startHit(Number(key));
+  else if (key === 'enter' && pending) confirmHit();
+  else if (key === 'escape') {
+    if (pending) cancelHit();
+    else send({ type: 'hideAll' });
+  }
   else return;
   event.preventDefault();
 });

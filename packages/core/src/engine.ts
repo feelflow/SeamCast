@@ -14,8 +14,12 @@ export type Action =
   | { type: 'foul' }
   /** Schlagmann ist nach einem Treffer ins Feld aus (kein Strikeout) */
   | { type: 'out' }
-  /** Treffer über 1 bis 4 Bases (4 = Homerun); Läufer rücken entsprechend vor */
-  | { type: 'hit'; bases: 1 | 2 | 3 | 4 }
+  /**
+   * Treffer über 1 bis 4 Bases (4 = Homerun). Ohne `runners` rücken alle Läufer
+   * um so viele Bases vor wie der Schlagmann. Mit `runners` bestimmt der Bediener,
+   * wie weit der Läufer von 1B, 2B und 3B kommt (0 = bleibt; 4 oder mehr = Run).
+   */
+  | { type: 'hit'; bases: 1 | 2 | 3 | 4; runners?: readonly [number, number, number] }
   | { type: 'hitByPitch' }
   /** Neuer Schlagmann: Count zurücksetzen */
   | { type: 'newBatter' }
@@ -90,12 +94,16 @@ function walk(state: GameState): GameState {
 }
 
 /** Treffer: Alle Läufer und der Schlagmann rücken um `advance` Bases vor. */
-function hit(state: GameState, advance: number): GameState {
+function hit(
+  state: GameState,
+  advance: number,
+  runners?: readonly [number, number, number],
+): GameState {
   const next: [boolean, boolean, boolean] = [false, false, false];
   let runs = 0;
   state.bases.forEach((occupied, index) => {
     if (!occupied) return;
-    const target = index + 1 + advance;
+    const target = index + 1 + (runners ? (runners[index] ?? 0) : advance);
     if (target >= 4) runs += 1;
     else next[target - 1] = true;
   });
@@ -123,7 +131,7 @@ export function reduce(state: GameState, action: Action): GameState {
     case 'out':
       return addOut(addPitch(state));
     case 'hit':
-      return hit(addPitch(state), action.bases);
+      return hit(addPitch(state), action.bases, action.runners);
     case 'hitByPitch':
       return walk(addPitch(state));
     case 'newBatter':

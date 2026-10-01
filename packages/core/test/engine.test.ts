@@ -70,6 +70,22 @@ describe('Halbinning-Wechsel', () => {
   });
 });
 
+describe('Treffer mit Läufer-Auswahl', () => {
+  it('Läufer auf 2B bleibt bei einem Double auf 3B stehen, wenn der Bediener das wählt', () => {
+    const start = run([{ type: 'setBases', bases: [false, true, false] }]);
+    const state = run([{ type: 'hit', bases: 2, runners: [0, 1, 0] }], start);
+    expect(state.score.away).toBe(0);
+    expect(state.bases).toEqual([false, true, true]);
+  });
+
+  it('Läufer kann gezielt nach Hause geschickt werden', () => {
+    const start = run([{ type: 'setBases', bases: [true, false, false] }]);
+    const state = run([{ type: 'hit', bases: 1, runners: [3, 0, 0] }], start);
+    expect(state.score.away).toBe(1);
+    expect(state.bases).toEqual([true, false, false]);
+  });
+});
+
 describe('Treffer', () => {
   it('Single setzt den Schlagmann auf 1B und rückt Läufer eine Base vor', () => {
     const start = run([{ type: 'setBases', bases: [true, false, true] }]);

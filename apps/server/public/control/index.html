@@ -39,10 +39,19 @@
     <section class="panel">
       <h2>Treffer</h2>
       <div class="grid">
-        <button data-action='{"type":"hit","bases":1}'><kbd>1</kbd> Single</button>
-        <button data-action='{"type":"hit","bases":2}'><kbd>2</kbd> Double</button>
-        <button data-action='{"type":"hit","bases":3}'><kbd>3</kbd> Triple</button>
-        <button data-action='{"type":"hit","bases":4}'><kbd>4</kbd> Homerun</button>
+        <button data-hit="1"><kbd>1</kbd> Single</button>
+        <button data-hit="2"><kbd>2</kbd> Double</button>
+        <button data-hit="3"><kbd>3</kbd> Triple</button>
+        <button data-hit="4"><kbd>4</kbd> Homerun</button>
+      </div>
+      <div id="runners" hidden>
+        <h3 id="runners-title">Wohin kommen die Läufer?</h3>
+        <div id="runners-rows"></div>
+        <p class="hint" id="runners-error" hidden>Zwei Spieler auf derselben Base geht nicht.</p>
+        <div class="grid">
+          <button id="runners-ok" class="primary" data-on="true">Übernehmen <kbd>Enter</kbd></button>
+          <button id="runners-cancel">Abbrechen <kbd>Esc</kbd></button>
+        </div>
       </div>
     </section>
 
