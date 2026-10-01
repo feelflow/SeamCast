@@ -28,7 +28,7 @@
     "outs": true
   },
   "layout": {
-    "position": "bottom-left",
+    "position": "top-left",
     "margin": 40
   }
 }

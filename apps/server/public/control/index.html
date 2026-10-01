@@ -70,12 +70,9 @@
       <div class="adjust"><span>Outs</span>
         <button data-action='{"type":"adjustOuts","delta":-1}'>−</button>
         <button data-action='{"type":"adjustOuts","delta":1}'>+</button></div>
-      <div class="adjust"><span>Pitches Away</span>
-        <button data-action='{"type":"adjustPitches","side":"away","delta":-1}'>−</button>
-        <button data-action='{"type":"adjustPitches","side":"away","delta":1}'>+</button></div>
-      <div class="adjust"><span>Pitches Home</span>
-        <button data-action='{"type":"adjustPitches","side":"home","delta":-1}'>−</button>
-        <button data-action='{"type":"adjustPitches","side":"home","delta":1}'>+</button></div>
+      <div class="adjust"><span>Pitches <b id="pitch-now">0</b> <small id="pitch-who"></small></span>
+        <button id="pitch-minus">−</button>
+        <button id="pitch-plus">+</button></div>
       <div class="grid">
         <button data-action='{"type":"nextHalf"}'>Nächster Halbinning</button>
         <button id="new-pitcher">Neuer Pitcher</button>
@@ -99,7 +96,7 @@
 
     <section class="panel wide">
       <h2>Vorschau</h2>
-      <iframe id="preview" title="Vorschau" src="/overlay/scoreboard.html?role=preview"></iframe>
+      <div id="preview-box"><iframe id="preview" title="Vorschau" width="1920" height="1080" src="/overlay/scoreboard.html?role=preview"></iframe></div>
       <p class="hint">Overlay-Adresse für OBS / vMix / CasparCG: <code id="overlay-url"></code></p>
     </section>
   </main>

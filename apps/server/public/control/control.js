@@ -30,6 +30,9 @@ function render(msg) {
   $('lbl-away').textContent = `${g.teams.away.name} (Gast)`;
   $('lbl-home').textContent = `${g.teams.home.name} (Heim)`;
   g.bases.forEach((on, i) => ($(`base-btn-${i}`).dataset.on = String(on)));
+  const fielding = g.half === 'top' ? 'home' : 'away';
+  $('pitch-now').textContent = String(g.pitches[fielding]);
+  $('pitch-who').textContent = `(${g.teams[fielding].short})`;
   $('undo').disabled = !msg.canUndo;
   $('toggle-scoreboard').dataset.on = String(msg.graphics.scoreboard);
   $('toggle-scoreboard').textContent = msg.graphics.scoreboard ? 'Scoreboard: AN' : 'Scoreboard: AUS';
@@ -95,6 +98,22 @@ for (let i = 0; i < 3; i++) {
     act({ type: 'setBases', bases });
   });
 }
+
+function pitchSide() {
+  return last && last.game.half === 'top' ? 'home' : 'away';
+}
+$('pitch-minus').addEventListener('click', () => last && act({ type: 'adjustPitches', side: pitchSide(), delta: -1 }));
+$('pitch-plus').addEventListener('click', () => last && act({ type: 'adjustPitches', side: pitchSide(), delta: 1 }));
+
+// Vorschau in echter Streamgröße (1920x1080), verkleinert auf die Breite der Box
+function fitPreview() {
+  const box = $('preview-box');
+  const scale = box.clientWidth / 1920;
+  $('preview').style.transform = `scale(${scale})`;
+  box.style.height = `${1080 * scale}px`;
+}
+window.addEventListener('resize', fitPreview);
+fitPreview();
 
 $('undo').addEventListener('click', () => send({ type: 'undo' }));
 $('hide-all').addEventListener('click', () => send({ type: 'hideAll' }));
