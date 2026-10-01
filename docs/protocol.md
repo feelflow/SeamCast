@@ -10,6 +10,7 @@ Client (role `control` only) → server:
 - `{type:"undo"}`
 - `{type:"graphics", id:"scoreboard"|"batter"|"pitcher", visible:boolean}`
 - `{type:"select", role:"batter"|"pitcher", side:"away"|"home", playerId:number|null}` – picks the player per side; the batter card shows the batting side's pick, the pitcher card the fielding side's. Unknown ids are rejected.
+- `{type:"lineup", side, slots:[{playerId, pos}]}` – batting order of a team (max 12, unique players, `pos` ≤ 3 chars); snapshot field `lineups:{away,home:[{order,playerId,number,firstName,lastName,pos}]}`; graphic ids `lineupAway` / `lineupHome`
 - `{type:"hideAll"}`
 
 Invalid input is answered with `{type:"error", message}`. HTTP: `GET /api/state`, `GET /api/profiles/<id>`.

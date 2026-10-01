@@ -18,6 +18,7 @@ pnpm start
 - Control page: http://127.0.0.1:8080/control/
 - Scoreboard overlay: http://127.0.0.1:8080/overlay/scoreboard.html (transparent; add as browser source in OBS/vMix)
 - Batter/pitcher cards: http://127.0.0.1:8080/overlay/players.html – pick players on the control page under "Spielerkarten"; values come from imported season stats.
+- Lineups: http://127.0.0.1:8080/overlay/lineup.html – set the batting order under "Aufstellung" on the control page, save, then show.
 
 Manage teams and players at http://127.0.0.1:8080/kader/; pick them for a game on the control page.
 
