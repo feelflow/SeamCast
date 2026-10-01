@@ -1,0 +1,64 @@
+:root {
+  color-scheme: light;
+  --bg: #f3f5f9;
+  --card: #ffffff;
+  --line: #d5dce8;
+  --text: #17233a;
+  --muted: #5d6c85;
+  --accent: #f2b01e;
+  --accent-text: #17233a;
+  --btn: #eaeef5;
+  --btn-hover: #dde4f0;
+  --ok: #1f8a4c;
+  --danger: #c93a3a;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.4 'Segoe UI', Arial, sans-serif; }
+header { display: flex; align-items: center; gap: 10px; padding: 10px 16px; background: var(--card); border-bottom: 1px solid var(--line); flex-wrap: wrap; position: sticky; top: 0; z-index: 1; }
+h1 { margin: 0 8px 0 0; font-size: 20px; color: var(--text); }
+h1::after { content: ''; display: inline-block; width: 8px; height: 8px; margin-left: 6px; border-radius: 50%; background: var(--accent); }
+h2 { margin: 0 0 10px; font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.spacer { flex: 1; }
+.chip { padding: 3px 10px; border-radius: 99px; background: var(--btn); font-size: 13px; }
+.chip[data-ok='true'] { background: #d9f1e2; color: #14663a; }
+#chip-error { background: #f8dada; color: #8f2323; }
+main { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; padding: 16px; max-width: 1200px; margin: 0 auto; }
+.panel { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px; box-shadow: 0 1px 2px rgba(23, 35, 58, .05); }
+.panel.wide, .panel.summary { grid-column: 1 / -1; }
+.summary { display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
+.big { font-size: 34px; font-weight: 800; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; margin-top: 8px; }
+button { font: inherit; color: var(--text); background: var(--btn); border: 1px solid var(--line); border-radius: 8px; padding: 12px 10px; cursor: pointer; }
+button:hover { background: var(--btn-hover); }
+button:active { transform: translateY(1px); }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid #2b6cd9; outline-offset: 1px; }
+button.primary { background: var(--ok); border-color: var(--ok); color: #fff; }
+button.primary[data-on='false'] { background: var(--btn); border-color: var(--line); color: var(--text); }
+button.danger { background: var(--danger); border-color: var(--danger); color: #fff; }
+button.ghost { background: transparent; }
+button.toggle[data-on='true'] { background: var(--accent); border-color: var(--accent); color: var(--accent-text); font-weight: 700; }
+button:disabled { opacity: .4; cursor: default; }
+kbd { background: #fff; border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; font-size: 12px; margin-right: 4px; color: var(--muted); }
+.adjust { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.adjust span { flex: 1; }
+.adjust small { color: var(--muted); }
+.adjust button { width: 48px; padding: 8px; }
+label { display: block; color: var(--muted); font-size: 13px; }
+input, select { font: inherit; color: var(--text); background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 7px; width: 100%; }
+.team { display: grid; grid-template-columns: 1fr 80px auto; gap: 8px; align-items: end; margin-top: 10px; }
+.team button { padding: 8px 12px; }
+#preview-box { width: 100%; position: relative; overflow: hidden; border: 1px solid var(--line); border-radius: 8px; background: #3a3f47; }
+#preview { position: absolute; left: 0; top: 0; border: 0; transform-origin: 0 0; }
+.hint { color: var(--muted); font-size: 13px; }
+code { background: var(--btn); padding: 2px 6px; border-radius: 4px; }
+[hidden] { display: none !important; }
+
+#runners { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); }
+#runners h3 { margin: 0 0 8px; font-size: 14px; }
+.runner-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+.runner-row > span { width: 34px; font-weight: 700; }
+.runner-row button { flex: 1; padding: 8px 4px; }
+.runner-row button[aria-pressed='true'] { background: var(--accent); border-color: var(--accent); color: var(--accent-text); font-weight: 700; }
+#runners-error { color: var(--danger); }
+h2.sub { margin-top: 16px; }
+.runner-row button[data-out='true'] { color: var(--danger); }

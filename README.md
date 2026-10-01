@@ -1,2 +1,35 @@
 # SeamCast
-Live Graphics for Baseball and Softball
+
+**Live Graphics for Baseball and Softball** – browser-based control, HTML overlays for OBS, vMix and CasparCG.
+
+> Status: early development (phase 1, "core"). Deutsch: [README.de.md](README.de.md)
+
+Principle: everything that makes a graphic look like a specific club is **configuration, never code**.
+
+## Quick start
+
+Requires Node.js 22+ and pnpm.
+
+```sh
+pnpm install
+pnpm start
+```
+
+- Control page: http://127.0.0.1:8080/control/
+- Scoreboard overlay: http://127.0.0.1:8080/overlay/scoreboard.html (transparent; add as browser source in OBS/vMix)
+
+Environment: `SEAMCAST_HOST` (default `127.0.0.1`), `SEAMCAST_PORT` (`8080`), `SEAMCAST_DATA` (`./data`).
+There is no login yet – keep the default loopback binding unless you are on a trusted network.
+
+## Design
+
+Overlay colors, labels, fonts and position come from JSON profiles in `config/profiles/`
+(`?profile=<id>` selects one). Game logic lives in `packages/core` (pure, tested); the server in
+`apps/server` keeps the authoritative state and pushes snapshots over WebSocket. See [docs/protocol.md](docs/protocol.md).
+
+```sh
+pnpm test        # unit + server tests
+pnpm typecheck
+```
+
+Keyboard on the control page: `B` ball, `S` strike, `F` foul, `O` out, `1`-`4` hits, `N` new batter, `U`/`Ctrl+Z` undo, `Esc` hide all.
