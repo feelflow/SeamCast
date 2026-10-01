@@ -109,6 +109,29 @@
       <p class="hint" id="cards-hint" hidden>Noch keine Spieler im Kader. Unter „Kader“ anlegen oder importieren.</p>
     </section>
 
+    <section class="panel wide" id="lineup-panel">
+      <h2>Aufstellung</h2>
+      <div class="lineup-sides">
+        <div class="lineup-side" data-side="away">
+          <h3 id="lu-title-away">Gast</h3>
+          <div class="lu-rows" id="lu-rows-away"></div>
+          <div class="grid">
+            <button id="lu-save-away" class="primary">Speichern</button>
+            <button class="toggle" id="lu-toggle-away" data-on="false">Einblenden</button>
+          </div>
+        </div>
+        <div class="lineup-side" data-side="home">
+          <h3 id="lu-title-home">Heim</h3>
+          <div class="lu-rows" id="lu-rows-home"></div>
+          <div class="grid">
+            <button id="lu-save-home" class="primary">Speichern</button>
+            <button class="toggle" id="lu-toggle-home" data-on="false">Einblenden</button>
+          </div>
+        </div>
+      </div>
+      <p class="hint">Reihenfolge = Schlagreihenfolge. Erst „Speichern“, dann einblenden.</p>
+    </section>
+
     <section class="panel">
       <h2>Spiel</h2>
       <label>Regeln <select id="rules"></select></label>

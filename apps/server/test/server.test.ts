@@ -214,3 +214,37 @@ describe('Spielerkarten', () => {
     expect(errors).toHaveLength(1);
   });
 });
+
+describe('Aufstellung', () => {
+  it('speichert eine Aufstellung und lehnt Ungültiges ab', async () => {
+    const { port } = await start();
+    const control = open(port, 'control');
+    await control.ready;
+    const post = async (url: string, body: unknown) =>
+      (await (await fetch(`http://127.0.0.1:${port}${url}`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', origin: `http://127.0.0.1:${port}` },
+        body: JSON.stringify(body),
+      })).json()) as { id: number };
+    const team = await post('/api/teams', { name: 'Heideköpfe', short: 'HDH' });
+    const a = await post('/api/players', { teamId: team.id, firstName: 'A', lastName: 'Eins', number: 1 });
+    const b = await post('/api/players', { teamId: team.id, firstName: 'B', lastName: 'Zwei', number: 2 });
+
+    type LSnap = Snap & { lineups: { home: Array<{ lastName: string; order: number; pos: string }> } };
+    const untilL = control.until as unknown as (t: (s: LSnap) => boolean) => Promise<LSnap>;
+    control.send({ type: 'lineup', side: 'home', slots: [{ playerId: a.id, pos: 'p' }, { playerId: b.id, pos: 'C' }] });
+    const snap = await untilL((s) => s.lineups?.home.length === 2);
+    expect(snap.lineups.home[0]).toMatchObject({ lastName: 'Eins', order: 1, pos: 'P' });
+
+    const errors: unknown[] = [];
+    control.ws.on('message', (d) => {
+      const m = JSON.parse(d.toString()) as { type: string };
+      if (m.type === 'error') errors.push(m);
+    });
+    control.send({ type: 'lineup', side: 'home', slots: [{ playerId: a.id, pos: 'P' }, { playerId: a.id, pos: 'C' }] });
+    control.send({ type: 'lineup', side: 'home', slots: [{ playerId: 99999, pos: 'P' }] });
+    control.send({ type: 'lineup', side: 'home', slots: [{ playerId: a.id, pos: 'LONG' }] });
+    await new Promise((r) => setTimeout(r, 100));
+    expect(errors).toHaveLength(3);
+  });
+});

@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { WebSocketServer, type WebSocket } from 'ws';
 import { Game, RULE_PROFILES, battingSide, fieldingSide, parseAction, parsePlayerInput, parseTeamInput } from '@seamcast/core';
 import { createRepo, openDatabase } from './db.js';
+import { buildLineup, emptyLineups, parseSlots, readLineups, type Lineups } from './lineup.js';
 import { buildCard, emptyMatchup, readMatchup, type Matchup } from './cards.js';
 import { importFromAccess } from './importer.js';
 import { statLines } from './statlines.js';
@@ -33,7 +34,7 @@ export interface RunningServer {
 
 type Role = 'overlay' | 'control' | 'preview';
 
-const GRAPHIC_IDS = ['scoreboard', 'batter', 'pitcher'] as const;
+const GRAPHIC_IDS = ['scoreboard', 'batter', 'pitcher', 'lineupAway', 'lineupHome'] as const;
 type GraphicId = (typeof GRAPHIC_IDS)[number];
 type Graphics = Record<GraphicId, boolean>;
 
@@ -70,7 +71,7 @@ const CSP = [
 const PROFILE_ID = /^[a-z0-9-]{1,40}$/;
 
 function readGraphics(saved: unknown): Graphics {
-  const result: Graphics = { scoreboard: true, batter: false, pitcher: false };
+  const result: Graphics = { scoreboard: true, batter: false, pitcher: false, lineupAway: false, lineupHome: false };
   const raw = (saved as { graphics?: Record<string, unknown> } | null)?.graphics;
   if (raw && typeof raw === 'object') {
     for (const id of GRAPHIC_IDS) {
@@ -88,12 +89,13 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
   const profilesDir = path.resolve(options.profilesDir ?? path.join(repoRoot, 'config/profiles'));
 
   let game = new Game();
-  let graphics: Graphics = { scoreboard: true, batter: false, pitcher: false };
+  let graphics: Graphics = { scoreboard: true, batter: false, pitcher: false, lineupAway: false, lineupHome: false };
   let matchup: Matchup = emptyMatchup();
+  let lineups: Lineups = emptyLineups();
 
   const persistence = createPersistence(
     path.join(dataDir, 'game.json'),
-    () => ({ ...game.snapshot(), graphics, matchup }),
+    () => ({ ...game.snapshot(), graphics, matchup, lineups }),
     log,
   );
 
@@ -104,6 +106,7 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
       game = restored;
       graphics = readGraphics(saved);
       matchup = readMatchup(saved);
+      lineups = readLineups(saved);
       log('Spielstand aus der letzten Sitzung wiederhergestellt.');
     } else {
       log('Gespeicherter Spielstand ist ungültig und wird ignoriert.');
@@ -130,12 +133,16 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
         batter: buildCard(repo, 'batter', matchup.batter[battingSide(game.state)]),
         pitcher: buildCard(repo, 'pitcher', matchup.pitcher[fieldingSide(game.state)]),
       },
+      lineups: { away: buildLineup(repo, lineups.away), home: buildLineup(repo, lineups.home) },
       status: { overlays: count('overlay'), controls: count('control') },
       rules: RULE_PROFILES,
     };
   }
 
+  let closing = false;
+
   function broadcast(): void {
+    if (closing) return;
     const message = JSON.stringify(snapshot());
     for (const ws of clients.keys()) {
       if (ws.readyState === ws.OPEN) ws.send(message);
@@ -447,6 +454,14 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
         matchup = { ...matchup, [input.role]: { ...matchup[input.role], [side]: playerId } };
         break;
       }
+      case 'lineup': {
+        const side = input.side;
+        const slots = parseSlots(input.slots);
+        if ((side !== 'away' && side !== 'home') || !slots || slots.some((x) => !repo.getPlayer(x.playerId))) return reject(ws);
+        changed = JSON.stringify(lineups[side]) !== JSON.stringify(slots);
+        lineups = { ...lineups, [side]: slots };
+        break;
+      }
       case 'hideAll':
         changed = Object.values(graphics).some(Boolean);
         graphics = Object.fromEntries(GRAPHIC_IDS.map((id) => [id, false])) as Graphics;
@@ -490,6 +505,7 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
     host,
     port,
     async close() {
+      closing = true;
       clearInterval(heartbeat);
       for (const ws of clients.keys()) ws.terminate();
       wss.close();

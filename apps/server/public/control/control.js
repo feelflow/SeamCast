@@ -45,6 +45,7 @@ function render(msg) {
 
   renderPickers();
   renderCardToggles();
+  renderLineup();
   const select = $('rules');
   if (select.options.length === 0) {
     for (const rules of Object.values(msg.rules)) {
@@ -375,5 +376,71 @@ for (const [role, selectId] of [['batter', 'sel-batter'], ['pitcher', 'sel-pitch
   });
   $(`toggle-${role}`).addEventListener('click', () => {
     if (last) send({ type: 'graphics', id: role, visible: !last.graphics[role] });
+  });
+}
+
+// --- Aufstellung ------------------------------------------------------------
+const POSITIONS = ['', 'P', 'C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'DH', 'EH'];
+const LINEUP_ROWS = 10;
+const lineupDraft = { away: null, home: null };
+let lineupSignature = '';
+
+function lineupRows(side) {
+  const box = $(`lu-rows-${side}`);
+  const team = teamForSide(side);
+  const draft = lineupDraft[side];
+  box.replaceChildren();
+  for (let i = 0; i < LINEUP_ROWS; i += 1) {
+    const row = document.createElement('div');
+    row.className = 'lu-row';
+    const nr = document.createElement('span');
+    nr.textContent = String(i + 1);
+    const pick = document.createElement('select');
+    fillPicker(pick, team, draft[i]?.playerId ?? null);
+    const pos = document.createElement('select');
+    for (const p of POSITIONS) pos.append(new Option(p || '–', p));
+    pos.value = draft[i]?.pos ?? '';
+    const update = () => {
+      lineupDraft[side][i] = pick.value === '' ? null : { playerId: Number(pick.value), pos: pos.value };
+    };
+    pick.addEventListener('change', update);
+    pos.addEventListener('change', update);
+    row.append(nr, pick, pos);
+    box.append(row);
+  }
+}
+
+function renderLineup() {
+  if (!last) return;
+  const g = last.game;
+  const signature = JSON.stringify([g.teams.away, g.teams.home, last.lineups, rosterPlayers.length]);
+  for (const side of ['away', 'home']) {
+    $(`lu-title-${side}`).textContent = g.teams[side].name || (side === 'away' ? 'Gast' : 'Heim');
+    const on = Boolean(last.graphics[side === 'away' ? 'lineupAway' : 'lineupHome']);
+    const button = $(`lu-toggle-${side}`);
+    button.dataset.on = String(on);
+    button.textContent = on ? 'AN (ausblenden)' : 'Einblenden';
+    button.disabled = !on && last.lineups[side].length === 0;
+  }
+  if (signature === lineupSignature) return;
+  if (document.activeElement && document.activeElement.closest('#lineup-panel')) return;
+  lineupSignature = signature;
+  for (const side of ['away', 'home']) {
+    lineupDraft[side] = Array.from({ length: LINEUP_ROWS }, (_, i) => {
+      const row = last.lineups[side][i];
+      return row ? { playerId: row.playerId, pos: row.pos } : null;
+    });
+    lineupRows(side);
+  }
+}
+
+for (const side of ['away', 'home']) {
+  $(`lu-save-${side}`).addEventListener('click', () => {
+    const slots = lineupDraft[side].filter(Boolean);
+    send({ type: 'lineup', side, slots });
+  });
+  $(`lu-toggle-${side}`).addEventListener('click', () => {
+    const id = side === 'away' ? 'lineupAway' : 'lineupHome';
+    if (last) send({ type: 'graphics', id, visible: !last.graphics[id] });
   });
 }

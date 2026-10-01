@@ -67,3 +67,8 @@ h2.sub { margin-top: 16px; }
 .panel button.toggle { margin-top: 6px; width: 100%; }
 label small { margin-left: 6px; color: var(--accent-text); background: var(--accent); border-radius: 99px; padding: 0 7px; font-size: 11px; font-weight: 700; }
 label small:empty { display: none; }
+
+.lineup-sides { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.lu-rows { display: grid; gap: 4px; margin-bottom: 8px; }
+.lu-row { display: grid; grid-template-columns: 1.6em 1fr 4.2em; gap: 6px; align-items: center; }
+.lu-row span { color: var(--muted, #667); text-align: right; }

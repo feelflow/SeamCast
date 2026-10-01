@@ -18,6 +18,7 @@ pnpm start
 - Bedienung: http://127.0.0.1:8080/control/
 - Scoreboard-Overlay: http://127.0.0.1:8080/overlay/scoreboard.html (transparent, als Browserquelle in OBS/vMix einbinden)
 - Spielerkarten (Schlagmann/Pitcher): http://127.0.0.1:8080/overlay/players.html – Spieler wählst du in der Bedienung unter „Spielerkarten“, Werte stammen aus den importierten Saisonstatistiken.
+- Aufstellung: http://127.0.0.1:8080/overlay/lineup.html – Schlagreihenfolge unter „Aufstellung“ in der Bedienung pflegen, speichern, einblenden.
 
 Unter Windows reicht ein Doppelklick auf `start-seamcast.bat`: Sie aktualisiert, installiert, startet neu bei Absturz und öffnet die Bedienung im Browser.
 
