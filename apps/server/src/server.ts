@@ -3,7 +3,10 @@ import { readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { WebSocketServer, type WebSocket } from 'ws';
-import { Game, RULE_PROFILES, parseAction } from '@seamcast/core';
+import { Game, RULE_PROFILES, parseAction, parsePlayerInput, parseTeamInput } from '@seamcast/core';
+import { createRepo, openDatabase } from './db.js';
+import { importFromAccess } from './importer.js';
+import { statLines } from './statlines.js';
 import { createPersistence } from './persist.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -14,6 +17,8 @@ export interface ServerOptions {
   /** 0 wählt einen freien Port (für Tests) */
   port?: number;
   dataDir?: string;
+  /** Pfad der SQLite-Datei; Standard: seamcast.db im Datenordner */
+  dbFile?: string;
   publicDir?: string;
   profilesDir?: string;
   log?: (message: string) => void;
@@ -102,6 +107,9 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
     }
   }
 
+  const db = openDatabase(options.dbFile ?? path.join(dataDir, 'seamcast.db'));
+  const repo = createRepo(db);
+
   const clients = new Map<WebSocket, Role>();
   const alive = new WeakMap<WebSocket, boolean>();
 
@@ -168,16 +176,160 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
     }
   }
 
+  const json = (res: http.ServerResponse, status: number, body: unknown) =>
+    send(res, status, JSON.stringify(body), MIME['.json']!, false);
+
+  async function readJson(req: http.IncomingMessage): Promise<unknown> {
+    if (!/^application\/json\b/i.test(req.headers['content-type'] ?? '')) throw new Error('content-type');
+    const chunks: Buffer[] = [];
+    let size = 0;
+    for await (const chunk of req) {
+      size += (chunk as Buffer).length;
+      if (size > 16 * 1024) throw new Error('too large');
+      chunks.push(chunk as Buffer);
+    }
+    return JSON.parse(Buffer.concat(chunks).toString('utf8'));
+  }
+
+  async function readBinary(req: http.IncomingMessage, limit: number): Promise<Buffer> {
+    const chunks: Buffer[] = [];
+    let size = 0;
+    for await (const chunk of req) {
+      size += (chunk as Buffer).length;
+      if (size > limit) throw new Error('too large');
+      chunks.push(chunk as Buffer);
+    }
+    return Buffer.concat(chunks);
+  }
+
+  /** Spielerstatistik und Import: /api/players/<id>/stats, POST /api/import/access */
+  async function handleData(
+    req: http.IncomingMessage,
+    res: http.ServerResponse,
+    pathname: string,
+    search: URLSearchParams,
+  ): Promise<boolean> {
+    const stats = /^\/api\/players\/(\d+)\/stats$/.exec(pathname);
+    if (stats && (req.method === 'GET' || req.method === 'HEAD')) {
+      json(res, 200, statLines(repo.playerStats(Number(stats[1]))));
+      return true;
+    }
+    if (pathname !== '/api/import/access') return false;
+    if (req.method !== 'POST') {
+      json(res, 405, { error: 'Methode nicht erlaubt' });
+      return true;
+    }
+    if (!sameOrigin(req)) {
+      json(res, 403, { error: 'Fremde Herkunft' });
+      return true;
+    }
+    let file: Buffer;
+    try {
+      file = await readBinary(req, 50 * 1024 * 1024);
+    } catch {
+      json(res, 413, { error: 'Datei ist zu groß (mehr als 50 MB)' });
+      return true;
+    }
+    try {
+      json(res, 200, importFromAccess(db, file, search.get('dryRun') === '1'));
+    } catch (error) {
+      log(`Import fehlgeschlagen: ${error instanceof Error ? error.message : String(error)}`);
+      json(res, 400, { error: 'Die Datei konnte nicht gelesen werden. Ist es die Access-Datei (.accdb) des HTV-Managers?' });
+    }
+    return true;
+  }
+
+  /** Kader-Schnittstelle: /api/teams und /api/players. Gibt true zurück, wenn die Adresse dazugehört. */
+  async function handleRoster(
+    req: http.IncomingMessage,
+    res: http.ServerResponse,
+    pathname: string,
+    search: URLSearchParams,
+  ): Promise<boolean> {
+    const match = /^\/api\/(teams|players)(?:\/(\d+))?$/.exec(pathname);
+    if (!match) return false;
+    const kind = match[1] as 'teams' | 'players';
+    const id = match[2] === undefined ? undefined : Number(match[2]);
+    const method = req.method ?? 'GET';
+
+    if (method === 'GET' || method === 'HEAD') {
+      if (id !== undefined) {
+        json(res, 404, { error: 'Nicht gefunden' });
+      } else if (kind === 'teams') {
+        json(res, 200, repo.listTeams());
+      } else {
+        const team = search.get('team');
+        const teamId = team === null ? undefined : Number(team);
+        if (teamId !== undefined && !Number.isInteger(teamId)) json(res, 400, { error: 'Ungültige Mannschaft' });
+        else json(res, 200, repo.listPlayers(teamId));
+      }
+      return true;
+    }
+
+    if (method !== 'POST' && method !== 'PUT' && method !== 'DELETE') {
+      json(res, 405, { error: 'Methode nicht erlaubt' });
+      return true;
+    }
+    // Schreibzugriffe nur von der eigenen Seite (Schutz vor fremden Webseiten)
+    if (!sameOrigin(req)) {
+      json(res, 403, { error: 'Fremde Herkunft' });
+      return true;
+    }
+    if ((method === 'POST') === (id !== undefined)) {
+      json(res, 404, { error: 'Nicht gefunden' });
+      return true;
+    }
+
+    if (method === 'DELETE') {
+      const deleted = kind === 'teams' ? repo.deleteTeam(id as number) : repo.deletePlayer(id as number);
+      json(res, deleted ? 200 : 404, deleted ? { ok: true } : { error: 'Nicht gefunden' });
+      return true;
+    }
+
+    let body: unknown;
+    try {
+      body = await readJson(req);
+    } catch {
+      json(res, 400, { error: 'Ungültige Eingabe' });
+      return true;
+    }
+    const failures = {
+      conflict: [409, 'Gibt es schon'],
+      notFound: [404, 'Nicht gefunden'],
+      badTeam: [400, 'Mannschaft existiert nicht'],
+    } as const;
+    const answer = (outcome: ReturnType<typeof repo.createPlayer> | ReturnType<typeof repo.updateTeam>) => {
+      if (outcome.ok) json(res, method === 'POST' ? 201 : 200, outcome.value);
+      else json(res, failures[outcome.reason][0], { error: failures[outcome.reason][1] });
+    };
+
+    if (kind === 'teams') {
+      const input = parseTeamInput(body);
+      if (!input) json(res, 400, { error: 'Ungültige Eingabe' });
+      else answer(method === 'POST' ? repo.createTeam(input) : repo.updateTeam(id as number, input));
+    } else {
+      const input = parsePlayerInput(body);
+      if (!input) json(res, 400, { error: 'Ungültige Eingabe' });
+      else answer(method === 'POST' ? repo.createPlayer(input) : repo.updatePlayer(id as number, input));
+    }
+    return true;
+  }
+
   async function handle(req: http.IncomingMessage, res: http.ServerResponse) {
     const head = req.method === 'HEAD';
-    if (req.method !== 'GET' && !head) {
-      return send(res, 405, 'Nur GET erlaubt', 'text/plain; charset=utf-8', false);
-    }
     let pathname: string;
+    let search: URLSearchParams;
     try {
-      pathname = decodeURIComponent(new URL(req.url ?? '/', 'http://localhost').pathname);
+      const url = new URL(req.url ?? '/', 'http://localhost');
+      pathname = decodeURIComponent(url.pathname);
+      search = url.searchParams;
     } catch {
       return send(res, 400, 'Ungültige Adresse', 'text/plain; charset=utf-8', head);
+    }
+    if (await handleData(req, res, pathname, search)) return;
+    if (await handleRoster(req, res, pathname, search)) return;
+    if (req.method !== 'GET' && !head) {
+      return send(res, 405, 'Nur GET erlaubt', 'text/plain; charset=utf-8', false);
     }
 
     if (pathname === '/') {
@@ -327,6 +479,7 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
         server.closeAllConnections();
       });
       await persistence.flush();
+      db.close();
     },
   };
 }

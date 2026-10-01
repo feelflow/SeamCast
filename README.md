@@ -8,7 +8,7 @@ Principle: everything that makes a graphic look like a specific club is **config
 
 ## Quick start
 
-Requires Node.js 22+ and pnpm.
+Requires Node.js 22.13+ and pnpm. Data (game state, teams, players) is stored in `./data` (SQLite file `seamcast.db`).
 
 ```sh
 pnpm install
@@ -17,6 +17,10 @@ pnpm start
 
 - Control page: http://127.0.0.1:8080/control/
 - Scoreboard overlay: http://127.0.0.1:8080/overlay/scoreboard.html (transparent; add as browser source in OBS/vMix)
+
+Manage teams and players at http://127.0.0.1:8080/kader/; pick them for a game on the control page.
+
+The old HTV-Manager Access file can be imported on the same page (preview first, repeatable). Rates (AVG, ERA, …) are computed from raw counts.
 
 Environment: `SEAMCAST_HOST` (default `127.0.0.1`), `SEAMCAST_PORT` (`8080`), `SEAMCAST_DATA` (`./data`).
 There is no login yet – keep the default loopback binding unless you are on a trusted network.

@@ -268,3 +268,29 @@ document.addEventListener('keydown', (event) => {
 
 $('overlay-url').textContent = `${location.origin}/overlay/scoreboard.html`;
 connect();
+
+// --- Mannschaften aus dem Kader übernehmen ------------------------------------
+let rosterTeams = [];
+async function loadRoster() {
+  try {
+    const res = await fetch('/api/teams');
+    if (!res.ok) return;
+    rosterTeams = await res.json();
+  } catch {
+    return;
+  }
+  for (const side of ['away', 'home']) {
+    const select = $(`pick-${side}`);
+    select.replaceChildren(new Option('– wählen –', ''));
+    for (const team of rosterTeams) select.append(new Option(`${team.name} (${team.short})`, String(team.id)));
+  }
+}
+for (const side of ['away', 'home']) {
+  $(`pick-${side}`).addEventListener('change', (event) => {
+    const team = rosterTeams.find((t) => String(t.id) === event.target.value);
+    if (team) act({ type: 'setTeam', side, name: team.name, short: team.short });
+    event.target.value = '';
+  });
+}
+loadRoster();
+window.addEventListener('focus', loadRoster);

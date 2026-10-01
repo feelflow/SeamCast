@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <title>SeamCast – Kader</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="../control/control.css">
+  <link rel="stylesheet" href="kader.css">
+</head>
+<body>
+  <header>
+    <h1>SeamCast</h1>
+    <a class="btn" href="/control/">← Bedienung</a>
+    <span class="spacer"></span>
+    <span class="chip" id="status" hidden></span>
+  </header>
+
+  <main class="kader">
+    <div class="col">
+    <section class="panel">
+      <h2>Import aus Access</h2>
+      <p class="hint">Alte HTV-Manager-Datei (.accdb) wählen. Zuerst gibt es eine Vorschau, geschrieben wird erst nach deiner Bestätigung. Ein erneuter Import aktualisiert die vorhandenen Einträge.</p>
+      <input type="file" id="import-file" accept=".accdb,.mdb">
+      <div id="import-report" hidden></div>
+      <div class="row" id="import-actions" hidden>
+        <button id="import-go" class="primary" data-on="true">Jetzt importieren</button>
+        <button id="import-cancel" type="button">Abbrechen</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Mannschaften</h2>
+      <div id="teams"></div>
+      <form id="team-form" class="stack">
+        <h3 id="team-form-title">Neue Mannschaft</h3>
+        <label>Name <input name="name" maxlength="60" required></label>
+        <div class="two">
+          <label>Kürzel <input name="short" maxlength="6" required></label>
+          <label>Liga <input name="league" maxlength="60"></label>
+        </div>
+        <label>Logo-Datei <input name="logo" maxlength="100" placeholder="z. B. hdh.png"></label>
+        <label class="check"><input type="checkbox" name="own"> Eigene Mannschaft</label>
+        <div class="row">
+          <button type="submit" class="primary" data-on="true">Speichern</button>
+          <button type="button" id="team-cancel" hidden>Abbrechen</button>
+        </div>
+      </form>
+    </section>
+    </div>
+
+    <section class="panel">
+      <h2 id="players-title">Spieler</h2>
+      <p class="hint" id="players-hint">Mannschaft links wählen.</p>
+      <div class="table-wrap">
+        <table id="players" hidden>
+          <thead>
+            <tr><th>Nr</th><th>Nachname</th><th>Vorname</th><th>Bats</th><th>Throws</th><th>Nat.</th><th>Liga-ID</th><th></th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div id="stats" hidden></div>
+    </section>
+  </main>
+  <script src="kader.js"></script>
+</body>
+</html>

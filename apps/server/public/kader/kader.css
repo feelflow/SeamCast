@@ -1,0 +1,43 @@
+a.btn { display: inline-block; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; color: var(--text); text-decoration: none; background: transparent; }
+a.btn:hover { background: var(--btn-hover); }
+main.kader { grid-template-columns: minmax(300px, 1fr) minmax(0, 2.2fr); align-items: start; }
+@media (max-width: 900px) { main.kader { grid-template-columns: 1fr; } }
+.team-item { display: flex; align-items: center; gap: 8px; padding: 8px; border: 1px solid var(--line); border-radius: 8px; margin-bottom: 6px; cursor: pointer; }
+.team-item:hover { background: var(--btn); }
+.team-item[aria-current='true'] { border-color: var(--accent); background: #fff8e6; }
+.team-item .main { flex: 1; min-width: 0; }
+.team-item .name { font-weight: 600; }
+.team-item .meta { color: var(--muted); font-size: 13px; }
+.team-item button { padding: 4px 8px; font-size: 13px; }
+.badge { background: var(--accent); color: var(--accent-text); border-radius: 99px; padding: 0 8px; font-size: 12px; font-weight: 700; }
+.stack { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--line); display: grid; gap: 8px; }
+.stack h3 { margin: 0; font-size: 14px; }
+.two { display: grid; grid-template-columns: 1fr 2fr; gap: 8px; }
+.row { display: flex; gap: 8px; }
+label.check { display: flex; gap: 8px; align-items: center; }
+label.check input { width: auto; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font-size: 12px; color: var(--muted); padding: 4px; text-transform: uppercase; letter-spacing: .06em; }
+td { padding: 3px; }
+td input, td select { padding: 5px; min-width: 0; }
+td.num input { width: 62px; }
+td.hand select { width: 64px; }
+td.nat input { width: 58px; }
+td.ext input { width: 90px; }
+td.actions { white-space: nowrap; }
+td.actions button { padding: 5px 9px; font-size: 13px; }
+tr.fresh td { border-top: 2px solid var(--line); }
+tr.dirty input, tr.dirty select { background: #fff8e6; }
+
+#import-report { margin: 10px 0; font-size: 14px; }
+#import-report ul { margin: 6px 0; padding-left: 18px; }
+#import-report .warn { color: #8a5a00; font-size: 13px; }
+#import-actions { margin-top: 8px; }
+#stats { margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--line); overflow-x: auto; }
+#stats h3 { margin: 12px 0 6px; font-size: 14px; }
+#stats table { font-size: 13px; }
+#stats th, #stats td { padding: 4px 8px; text-align: right; white-space: nowrap; }
+#stats th:first-child, #stats td:first-child { text-align: left; }
+#stats tr.total td { font-weight: 700; border-top: 1px solid var(--line); }
+main.kader .col { display: grid; gap: 14px; }
