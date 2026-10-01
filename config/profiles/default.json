@@ -1,0 +1,34 @@
+{
+  "name": "SeamCast Standard",
+  "colors": {
+    "panel": "#10223c",
+    "panelText": "#ffffff",
+    "accent": "#f2b01e",
+    "muted": "#8fa3bf",
+    "scoreBg": "#ffffff",
+    "scoreText": "#10223c",
+    "baseOn": "#f2b01e",
+    "baseOff": "#2c4263"
+  },
+  "font": {
+    "family": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+    "scale": 1
+  },
+  "radius": 10,
+  "labels": {
+    "top": "▲",
+    "bottom": "▼",
+    "out": "OUT",
+    "pitch": "P"
+  },
+  "show": {
+    "pitchCount": true,
+    "bases": true,
+    "count": true,
+    "outs": true
+  },
+  "layout": {
+    "position": "bottom-left",
+    "margin": 40
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "@seamcast/server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "SeamCast-Server: Spielstand, WebSocket, Overlay- und Bedienseiten",
+  "dependencies": {
+    "@seamcast/core": "workspace:*",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.18.2"
+  }
+}

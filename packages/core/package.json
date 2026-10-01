@@ -1,0 +1,10 @@
+{
+  "name": "@seamcast/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Spielstand, Regelwerk und Statistikberechnung von SeamCast (ohne Abhängigkeiten)",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

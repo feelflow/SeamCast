@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <title>SeamCast – Bedienung</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="control.css">
+</head>
+<body>
+  <header>
+    <h1>SeamCast</h1>
+    <span class="chip" id="chip-conn" data-ok="false">Getrennt</span>
+    <span class="chip" id="chip-overlays">Overlays: 0</span>
+    <span class="chip" id="chip-error" hidden></span>
+    <span class="spacer"></span>
+    <button id="undo" class="ghost" title="Rückgängig (U / Strg+Z)">↶ Rückgängig</button>
+    <button id="toggle-scoreboard" class="primary">Scoreboard</button>
+    <button id="hide-all" class="danger" title="Esc">Alles aus</button>
+  </header>
+
+  <main>
+    <section class="panel summary">
+      <div class="big" id="sum-score"></div>
+      <div id="sum-state"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Wurf &amp; Aus</h2>
+      <div class="grid">
+        <button data-action='{"type":"ball"}'><kbd>B</kbd> Ball</button>
+        <button data-action='{"type":"strike"}'><kbd>S</kbd> Strike</button>
+        <button data-action='{"type":"foul"}'><kbd>F</kbd> Foul</button>
+        <button data-action='{"type":"out"}'><kbd>O</kbd> Out</button>
+        <button data-action='{"type":"hitByPitch"}'>Getroffen (HBP)</button>
+        <button data-action='{"type":"newBatter"}'><kbd>N</kbd> Neuer Batter</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Treffer</h2>
+      <div class="grid">
+        <button data-action='{"type":"hit","bases":1}'><kbd>1</kbd> Single</button>
+        <button data-action='{"type":"hit","bases":2}'><kbd>2</kbd> Double</button>
+        <button data-action='{"type":"hit","bases":3}'><kbd>3</kbd> Triple</button>
+        <button data-action='{"type":"hit","bases":4}'><kbd>4</kbd> Homerun</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Bases</h2>
+      <div class="grid">
+        <button class="toggle" id="base-btn-0">1B</button>
+        <button class="toggle" id="base-btn-1">2B</button>
+        <button class="toggle" id="base-btn-2">3B</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Punkte</h2>
+      <div class="adjust"><span id="lbl-away"></span>
+        <button data-action='{"type":"adjustScore","side":"away","delta":-1}'>−</button>
+        <button data-action='{"type":"adjustScore","side":"away","delta":1}'>+</button></div>
+      <div class="adjust"><span id="lbl-home"></span>
+        <button data-action='{"type":"adjustScore","side":"home","delta":-1}'>−</button>
+        <button data-action='{"type":"adjustScore","side":"home","delta":1}'>+</button></div>
+    </section>
+
+    <section class="panel">
+      <h2>Spielstand</h2>
+      <div class="adjust"><span>Outs</span>
+        <button data-action='{"type":"adjustOuts","delta":-1}'>−</button>
+        <button data-action='{"type":"adjustOuts","delta":1}'>+</button></div>
+      <div class="adjust"><span>Pitches Away</span>
+        <button data-action='{"type":"adjustPitches","side":"away","delta":-1}'>−</button>
+        <button data-action='{"type":"adjustPitches","side":"away","delta":1}'>+</button></div>
+      <div class="adjust"><span>Pitches Home</span>
+        <button data-action='{"type":"adjustPitches","side":"home","delta":-1}'>−</button>
+        <button data-action='{"type":"adjustPitches","side":"home","delta":1}'>+</button></div>
+      <div class="grid">
+        <button data-action='{"type":"nextHalf"}'>Nächster Halbinning</button>
+        <button id="new-pitcher">Neuer Pitcher</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Spiel</h2>
+      <label>Regeln <select id="rules"></select></label>
+      <form id="team-away" class="team">
+        <label>Gast <input name="name" maxlength="40" placeholder="Name"></label>
+        <input name="short" maxlength="6" placeholder="Kürzel" aria-label="Kürzel Gast">
+        <button type="submit">Setzen</button>
+      </form>
+      <form id="team-home" class="team">
+        <label>Heim <input name="name" maxlength="40" placeholder="Name"></label>
+        <input name="short" maxlength="6" placeholder="Kürzel" aria-label="Kürzel Heim">
+        <button type="submit">Setzen</button>
+      </form>
+    </section>
+
+    <section class="panel wide">
+      <h2>Vorschau</h2>
+      <iframe id="preview" title="Vorschau" src="/overlay/scoreboard.html?role=preview"></iframe>
+      <p class="hint">Overlay-Adresse für OBS / vMix / CasparCG: <code id="overlay-url"></code></p>
+    </section>
+  </main>
+  <script src="control.js"></script>
+</body>
+</html>

@@ -1,0 +1,178 @@
+:root {
+  --panel: #10223c;
+  --panel-text: #fff;
+  --accent: #f2b01e;
+  --muted: #8fa3bf;
+  --score-bg: #fff;
+  --score-text: #10223c;
+  --base-on: #f2b01e;
+  --base-off: #2c4263;
+  --font: 'Segoe UI', Arial, sans-serif;
+  --scale: 1;
+  --radius: 10px;
+  --margin: 40px;
+}
+
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  overflow: hidden;
+  font-family: var(--font);
+}
+
+/* Vorschau in der Bediensicht: dunkler Hintergrund, damit man das Overlay sieht */
+body[data-role='preview'] {
+  background: #3a3f47;
+}
+body[data-role='preview'][data-onair='false'] #scoreboard {
+  opacity: 0.25;
+}
+
+/* Verbindung weg: Grafik ausblenden statt veraltete Zahlen zu zeigen (A-07) */
+body:not([data-live='true']) #scoreboard {
+  opacity: 0;
+}
+
+#scoreboard {
+  position: absolute;
+  display: flex;
+  align-items: stretch;
+  color: var(--panel-text);
+  font-size: calc(28px * var(--scale));
+  line-height: 1;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+body[data-position='bottom-left'] #scoreboard { left: var(--margin); bottom: var(--margin); }
+body[data-position='bottom-right'] #scoreboard { right: var(--margin); bottom: var(--margin); }
+body[data-position='top-left'] #scoreboard { left: var(--margin); top: var(--margin); }
+body[data-position='top-right'] #scoreboard { right: var(--margin); top: var(--margin); }
+
+body[data-graphic='off'] #scoreboard {
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+.teams {
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  height: 1.7em;
+  padding: 0 0.5em;
+  gap: 0.6em;
+}
+.row + .row {
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+.row.batting .name::before {
+  content: '';
+  display: inline-block;
+  width: 0.35em;
+  height: 0.35em;
+  margin-right: 0.35em;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.name {
+  min-width: 3.2em;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.score {
+  min-width: 1.6em;
+  padding: 0.25em 0.3em;
+  text-align: center;
+  font-weight: 800;
+  background: var(--score-bg);
+  color: var(--score-text);
+  border-radius: calc(var(--radius) / 2);
+}
+
+.info {
+  display: flex;
+  align-items: center;
+  gap: 0.8em;
+  padding: 0 0.8em;
+  background: var(--panel);
+  border-left: 2px solid var(--accent);
+}
+.inning {
+  min-width: 2.1em;
+  text-align: center;
+  font-weight: 800;
+  color: var(--accent);
+}
+.inning small {
+  display: block;
+  font-size: 0.55em;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+#bases {
+  width: 2.2em;
+  height: 2.2em;
+}
+#bases rect {
+  fill: var(--base-off);
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: rotate(45deg);
+}
+#bases rect.on {
+  fill: var(--base-on);
+}
+
+.count {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35em;
+  font-size: 0.6em;
+  font-weight: 700;
+  color: var(--muted);
+}
+.count .line {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+}
+.dots {
+  display: inline-flex;
+  gap: 0.25em;
+}
+.dot {
+  width: 0.7em;
+  height: 0.7em;
+  border-radius: 50%;
+  background: var(--base-off);
+}
+.dot.on {
+  background: var(--accent);
+}
+
+.pitches {
+  font-size: 0.55em;
+  font-weight: 700;
+  color: var(--muted);
+  text-align: center;
+}
+.pitches b {
+  display: block;
+  font-size: 1.6em;
+  color: var(--panel-text);
+}
+
+[hidden] {
+  display: none !important;
+}

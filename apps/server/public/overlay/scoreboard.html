@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <title>SeamCast – Scoreboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="overlay.css">
+</head>
+<body data-live="false" data-graphic="on" data-position="bottom-left">
+  <div id="scoreboard">
+    <div class="teams">
+      <div class="row" id="row-away"><span class="name" id="name-away"></span><span class="score" id="score-away">0</span></div>
+      <div class="row" id="row-home"><span class="name" id="name-home"></span><span class="score" id="score-home">0</span></div>
+    </div>
+    <div class="info">
+      <div class="inning"><span id="half"></span> <span id="inning">1</span></div>
+      <svg id="bases" viewBox="0 0 40 40" aria-hidden="true">
+        <rect id="base-2" x="14" y="2" width="12" height="12"/>
+        <rect id="base-3" x="2" y="14" width="12" height="12"/>
+        <rect id="base-1" x="26" y="14" width="12" height="12"/>
+      </svg>
+      <div class="count" id="count">
+        <div class="line"><span>B</span><span class="dots" id="balls"></span></div>
+        <div class="line"><span>S</span><span class="dots" id="strikes"></span></div>
+        <div class="line"><span id="out-label">OUT</span><span class="dots" id="outs"></span></div>
+      </div>
+      <div class="pitches" id="pitches"><span id="pitch-label">P</span><b id="pitch-count">0</b></div>
+    </div>
+  </div>
+  <script src="scoreboard.js"></script>
+</body>
+</html>

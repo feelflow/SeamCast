@@ -1,0 +1,22 @@
+{
+  "name": "seamcast",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Live Graphics for Baseball and Softball",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "tsx apps/server/src/index.ts",
+    "dev": "tsx watch apps/server/src/index.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.4",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.3"
+  }
+}

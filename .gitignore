@@ -1,0 +1,13 @@
+node_modules/
+dist/
+coverage/
+
+# Laufzeitdaten (Spielstand, Datenbank, Medien) gehören nie ins Repository
+data/
+*.db
+*.sqlite
+*.accdb
+*.mdb
+
+.DS_Store
+.env
