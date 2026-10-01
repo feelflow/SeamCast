@@ -5,6 +5,8 @@ import { fileURLToPath } from 'node:url';
 import { WebSocketServer, type WebSocket } from 'ws';
 import { Game, RULE_PROFILES, parseAction, parsePlayerInput, parseTeamInput } from '@seamcast/core';
 import { createRepo, openDatabase } from './db.js';
+import { importFromAccess } from './importer.js';
+import { statLines } from './statlines.js';
 import { createPersistence } from './persist.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -189,6 +191,54 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
     return JSON.parse(Buffer.concat(chunks).toString('utf8'));
   }
 
+  async function readBinary(req: http.IncomingMessage, limit: number): Promise<Buffer> {
+    const chunks: Buffer[] = [];
+    let size = 0;
+    for await (const chunk of req) {
+      size += (chunk as Buffer).length;
+      if (size > limit) throw new Error('too large');
+      chunks.push(chunk as Buffer);
+    }
+    return Buffer.concat(chunks);
+  }
+
+  /** Spielerstatistik und Import: /api/players/<id>/stats, POST /api/import/access */
+  async function handleData(
+    req: http.IncomingMessage,
+    res: http.ServerResponse,
+    pathname: string,
+    search: URLSearchParams,
+  ): Promise<boolean> {
+    const stats = /^\/api\/players\/(\d+)\/stats$/.exec(pathname);
+    if (stats && (req.method === 'GET' || req.method === 'HEAD')) {
+      json(res, 200, statLines(repo.playerStats(Number(stats[1]))));
+      return true;
+    }
+    if (pathname !== '/api/import/access') return false;
+    if (req.method !== 'POST') {
+      json(res, 405, { error: 'Methode nicht erlaubt' });
+      return true;
+    }
+    if (!sameOrigin(req)) {
+      json(res, 403, { error: 'Fremde Herkunft' });
+      return true;
+    }
+    let file: Buffer;
+    try {
+      file = await readBinary(req, 50 * 1024 * 1024);
+    } catch {
+      json(res, 413, { error: 'Datei ist zu groß (mehr als 50 MB)' });
+      return true;
+    }
+    try {
+      json(res, 200, importFromAccess(db, file, search.get('dryRun') === '1'));
+    } catch (error) {
+      log(`Import fehlgeschlagen: ${error instanceof Error ? error.message : String(error)}`);
+      json(res, 400, { error: 'Die Datei konnte nicht gelesen werden. Ist es die Access-Datei (.accdb) des HTV-Managers?' });
+    }
+    return true;
+  }
+
   /** Kader-Schnittstelle: /api/teams und /api/players. Gibt true zurück, wenn die Adresse dazugehört. */
   async function handleRoster(
     req: http.IncomingMessage,
@@ -276,6 +326,7 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
     } catch {
       return send(res, 400, 'Ungültige Adresse', 'text/plain; charset=utf-8', head);
     }
+    if (await handleData(req, res, pathname, search)) return;
     if (await handleRoster(req, res, pathname, search)) return;
     if (req.method !== 'GET' && !head) {
       return send(res, 405, 'Nur GET erlaubt', 'text/plain; charset=utf-8', false);

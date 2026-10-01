@@ -20,6 +20,8 @@ pnpm start
 
 Manage teams and players at http://127.0.0.1:8080/kader/; pick them for a game on the control page.
 
+The old HTV-Manager Access file can be imported on the same page (preview first, repeatable). Rates (AVG, ERA, …) are computed from raw counts.
+
 Environment: `SEAMCAST_HOST` (default `127.0.0.1`), `SEAMCAST_PORT` (`8080`), `SEAMCAST_DATA` (`./data`).
 There is no login yet – keep the default loopback binding unless you are on a trusted network.
 

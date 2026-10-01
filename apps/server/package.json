@@ -6,6 +6,7 @@
   "description": "SeamCast-Server: Spielstand, WebSocket, Overlay- und Bedienseiten",
   "dependencies": {
     "@seamcast/core": "workspace:*",
+    "mdb-reader": "^3.2.0",
     "ws": "^8.18.0"
   },
   "devDependencies": {

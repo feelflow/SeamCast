@@ -29,3 +29,15 @@ td.actions { white-space: nowrap; }
 td.actions button { padding: 5px 9px; font-size: 13px; }
 tr.fresh td { border-top: 2px solid var(--line); }
 tr.dirty input, tr.dirty select { background: #fff8e6; }
+
+#import-report { margin: 10px 0; font-size: 14px; }
+#import-report ul { margin: 6px 0; padding-left: 18px; }
+#import-report .warn { color: #8a5a00; font-size: 13px; }
+#import-actions { margin-top: 8px; }
+#stats { margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--line); overflow-x: auto; }
+#stats h3 { margin: 12px 0 6px; font-size: 14px; }
+#stats table { font-size: 13px; }
+#stats th, #stats td { padding: 4px 8px; text-align: right; white-space: nowrap; }
+#stats th:first-child, #stats td:first-child { text-align: left; }
+#stats tr.total td { font-weight: 700; border-top: 1px solid var(--line); }
+main.kader .col { display: grid; gap: 14px; }

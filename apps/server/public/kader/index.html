@@ -17,6 +17,18 @@
   </header>
 
   <main class="kader">
+    <div class="col">
+    <section class="panel">
+      <h2>Import aus Access</h2>
+      <p class="hint">Alte HTV-Manager-Datei (.accdb) wählen. Zuerst gibt es eine Vorschau, geschrieben wird erst nach deiner Bestätigung. Ein erneuter Import aktualisiert die vorhandenen Einträge.</p>
+      <input type="file" id="import-file" accept=".accdb,.mdb">
+      <div id="import-report" hidden></div>
+      <div class="row" id="import-actions" hidden>
+        <button id="import-go" class="primary" data-on="true">Jetzt importieren</button>
+        <button id="import-cancel" type="button">Abbrechen</button>
+      </div>
+    </section>
+
     <section class="panel">
       <h2>Mannschaften</h2>
       <div id="teams"></div>
@@ -35,6 +47,7 @@
         </div>
       </form>
     </section>
+    </div>
 
     <section class="panel">
       <h2 id="players-title">Spieler</h2>
@@ -47,6 +60,7 @@
           <tbody></tbody>
         </table>
       </div>
+      <div id="stats" hidden></div>
     </section>
   </main>
   <script src="kader.js"></script>

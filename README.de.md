@@ -22,6 +22,8 @@ Unter Windows reicht ein Doppelklick auf `start-seamcast.bat`: Sie aktualisiert,
 
 Mannschaften und Spieler pflegst du unter http://127.0.0.1:8080/kader/ und übernimmst sie in der Bedienung per Auswahl „Gast/Heim aus Kader“.
 
+Die alte Access-Datei des HTV-Managers importierst du auf derselben Seite (zuerst Vorschau, dann Import; wiederholbar). Statistik-Quoten (AVG, ERA …) rechnet SeamCast aus den Rohwerten selbst.
+
 Umgebungsvariablen: `SEAMCAST_HOST` (Standard `127.0.0.1`), `SEAMCAST_PORT` (`8080`), `SEAMCAST_DATA` (`./data`).
 Es gibt noch keine Anmeldung – im Zweifel nur lokal betreiben.
 

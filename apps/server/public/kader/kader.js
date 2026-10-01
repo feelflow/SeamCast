@@ -165,8 +165,10 @@ function playerRow(team, player) {
 
   const save = el('button', { type: 'button', textContent: player ? 'Speichern' : 'Hinzufügen' });
   const del = el('button', { type: 'button', textContent: 'Löschen' });
+  const statsBtn = el('button', { type: 'button', textContent: 'Stats' });
   const actions = el('td', { className: 'actions' }, save);
-  if (player) actions.append(' ', del);
+  if (player) actions.append(' ', statsBtn, ' ', del);
+  statsBtn.addEventListener('click', () => showStats(player));
 
   row.append(cell('num', number), cell('', last), cell('', first), cell('hand', bats), cell('hand', throws), cell('nat', nat), cell('ext', ext), actions);
   row.addEventListener('input', () => row.classList.add('dirty'));
@@ -212,3 +214,120 @@ function playerRow(team, player) {
 }
 
 loadTeams().catch(fail);
+
+// --- Statistik ----------------------------------------------------------------
+function statTable(columns, rows, total) {
+  const table = el('table');
+  table.append(el('thead', {}, el('tr', {}, ...columns.map(([, label]) => el('th', { textContent: label })))));
+  const body = el('tbody');
+  for (const row of rows) body.append(el('tr', {}, ...columns.map(([key]) => el('td', { textContent: String(row[key] ?? '') }))));
+  if (total && rows.length > 1) {
+    const tr = el('tr', { className: 'total' }, ...columns.map(([key]) => el('td', { textContent: key === 'label' ? 'Gesamt' : String(total[key] ?? '') })));
+    body.append(tr);
+  }
+  table.append(body);
+  return table;
+}
+
+async function showStats(player) {
+  const box = $('stats');
+  box.hidden = false;
+  box.replaceChildren(el('h3', { textContent: `Statistik – ${player.firstName} ${player.lastName}`.trim() }));
+  try {
+    const data = await api('GET', `/api/players/${player.id}/stats`);
+    const label = (r) => ({ ...r, label: `${r.season} ${r.round_name}`.trim() });
+    if (!data.batting.length && !data.pitching.length) {
+      box.append(el('p', { className: 'hint', textContent: 'Noch keine Statistik vorhanden.' }));
+      return;
+    }
+    if (data.batting.length) {
+      box.append(el('h3', { textContent: 'Schlagen' }));
+      box.append(statTable(
+        [['label', 'Runde'], ['g', 'G'], ['pa', 'PA'], ['ab', 'AB'], ['r', 'R'], ['h', 'H'], ['doubles', '2B'], ['triples', '3B'], ['hr', 'HR'], ['rbi', 'RBI'], ['bb', 'BB'], ['so', 'SO'], ['sb', 'SB'], ['avg', 'AVG'], ['obp', 'OBP'], ['slg', 'SLG'], ['ops', 'OPS']],
+        data.batting.map(label), data.battingTotal && label(data.battingTotal)));
+    }
+    if (data.pitching.length) {
+      box.append(el('h3', { textContent: 'Pitchen' }));
+      box.append(statTable(
+        [['label', 'Runde'], ['g', 'G'], ['gs', 'GS'], ['w', 'W'], ['l', 'L'], ['sv', 'SV'], ['ip', 'IP'], ['h', 'H'], ['r', 'R'], ['er', 'ER'], ['bb', 'BB'], ['so', 'SO'], ['era', 'ERA'], ['whip', 'WHIP']],
+        data.pitching.map(label), data.pitchingTotal && label(data.pitchingTotal)));
+    }
+  } catch (error) {
+    fail(error);
+  }
+}
+
+// --- Import aus Access --------------------------------------------------------
+const fileInput = $('import-file');
+let importFile = null;
+
+function reportLine(label, part) {
+  return `${label}: ${part.created} neu, ${part.updated} aktualisiert`;
+}
+
+function renderReport(report) {
+  const box = $('import-report');
+  box.replaceChildren(
+    el('strong', { textContent: report.dryRun ? 'Vorschau – noch nichts geschrieben' : 'Import abgeschlossen' }),
+    el('ul', {}, ...[
+      reportLine('Mannschaften', report.teams),
+      reportLine('Spieler', report.players),
+      reportLine('Schlagstatistik', report.batting),
+      reportLine('Pitching-Statistik', report.pitching),
+    ].map((text) => el('li', { textContent: text }))),
+  );
+  if (report.warnings.length) {
+    box.append(el('div', { className: 'warn', textContent: `${report.warnings.length} Hinweise:` }));
+    box.append(el('ul', { className: 'warn' }, ...report.warnings.slice(0, 15).map((w) => el('li', { textContent: w }))));
+    if (report.warnings.length > 15) box.append(el('div', { className: 'warn', textContent: `… und ${report.warnings.length - 15} weitere` }));
+  }
+  box.hidden = false;
+}
+
+async function sendImport(dryRun) {
+  const res = await fetch(`/api/import/access${dryRun ? '?dryRun=1' : ''}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/octet-stream' },
+    body: importFile,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Import fehlgeschlagen');
+  return data;
+}
+
+function resetImport() {
+  importFile = null;
+  fileInput.value = '';
+  $('import-actions').hidden = true;
+}
+
+fileInput.addEventListener('change', async () => {
+  importFile = fileInput.files[0] ?? null;
+  $('import-actions').hidden = true;
+  if (!importFile) return;
+  status('Datei wird geprüft …');
+  try {
+    renderReport(await sendImport(true));
+    $('import-actions').hidden = false;
+  } catch (error) {
+    $('import-report').hidden = true;
+    fail(error);
+  }
+});
+$('import-cancel').addEventListener('click', () => {
+  resetImport();
+  $('import-report').hidden = true;
+});
+$('import-go').addEventListener('click', async () => {
+  $('import-go').disabled = true;
+  try {
+    renderReport(await sendImport(false));
+    resetImport();
+    await loadTeams();
+    status('Import abgeschlossen');
+  } catch (error) {
+    fail(error);
+  } finally {
+    $('import-go').disabled = false;
+  }
+});

@@ -33,6 +33,33 @@ const MIGRATIONS: string[] = [
   CREATE INDEX players_team ON players (team_id);
   CREATE UNIQUE INDEX players_external ON players (external_id) WHERE external_id <> '';
   `,
+  // Statistik: nur Rohwerte (Quoten wie AVG oder ERA rechnet SeamCast aus), ein Eintrag je Spieler, Saison und Runde
+  `
+  CREATE TABLE batting_stats (
+    id INTEGER PRIMARY KEY,
+    player_id INTEGER NOT NULL REFERENCES players (id) ON DELETE CASCADE,
+    season INTEGER NOT NULL, round_id INTEGER NOT NULL, round_name TEXT NOT NULL DEFAULT '', league TEXT NOT NULL DEFAULT '',
+    g INTEGER NOT NULL DEFAULT 0, pa INTEGER NOT NULL DEFAULT 0, ab INTEGER NOT NULL DEFAULT 0, r INTEGER NOT NULL DEFAULT 0,
+    h INTEGER NOT NULL DEFAULT 0, rbi INTEGER NOT NULL DEFAULT 0, doubles INTEGER NOT NULL DEFAULT 0, triples INTEGER NOT NULL DEFAULT 0,
+    hr INTEGER NOT NULL DEFAULT 0, sb INTEGER NOT NULL DEFAULT 0, cs INTEGER NOT NULL DEFAULT 0, pick INTEGER NOT NULL DEFAULT 0,
+    bb INTEGER NOT NULL DEFAULT 0, so INTEGER NOT NULL DEFAULT 0, hbp INTEGER NOT NULL DEFAULT 0, sh INTEGER NOT NULL DEFAULT 0,
+    sf INTEGER NOT NULL DEFAULT 0, ibb INTEGER NOT NULL DEFAULT 0, gidp INTEGER NOT NULL DEFAULT 0, lob INTEGER NOT NULL DEFAULT 0,
+    UNIQUE (player_id, season, round_id)
+  );
+  CREATE TABLE pitching_stats (
+    id INTEGER PRIMARY KEY,
+    player_id INTEGER NOT NULL REFERENCES players (id) ON DELETE CASCADE,
+    season INTEGER NOT NULL, round_id INTEGER NOT NULL, round_name TEXT NOT NULL DEFAULT '', league TEXT NOT NULL DEFAULT '',
+    g INTEGER NOT NULL DEFAULT 0, gs INTEGER NOT NULL DEFAULT 0, cg INTEGER NOT NULL DEFAULT 0, h INTEGER NOT NULL DEFAULT 0,
+    r INTEGER NOT NULL DEFAULT 0, er INTEGER NOT NULL DEFAULT 0, bb INTEGER NOT NULL DEFAULT 0, so INTEGER NOT NULL DEFAULT 0,
+    hbp INTEGER NOT NULL DEFAULT 0, wp INTEGER NOT NULL DEFAULT 0, bk INTEGER NOT NULL DEFAULT 0, w INTEGER NOT NULL DEFAULT 0,
+    l INTEGER NOT NULL DEFAULT 0, sv INTEGER NOT NULL DEFAULT 0, bs INTEGER NOT NULL DEFAULT 0, sv_opp INTEGER NOT NULL DEFAULT 0,
+    hold INTEGER NOT NULL DEFAULT 0, bf INTEGER NOT NULL DEFAULT 0, gb INTEGER NOT NULL DEFAULT 0, fb INTEGER NOT NULL DEFAULT 0,
+    a1b INTEGER NOT NULL DEFAULT 0, a2b INTEGER NOT NULL DEFAULT 0, a3b INTEGER NOT NULL DEFAULT 0, hr INTEGER NOT NULL DEFAULT 0,
+    sh INTEGER NOT NULL DEFAULT 0, ip_thirds INTEGER NOT NULL DEFAULT 0,
+    UNIQUE (player_id, season, round_id)
+  );
+  `,
 ];
 
 export function openDatabase(file: string): DatabaseSync {
@@ -170,6 +197,15 @@ export function createRepo(db: DatabaseSync) {
       const updated = player(id);
       return updated ? { ok: true, value: updated } : { ok: false, reason: 'notFound' };
     },
+
+    playerStats: (playerId: number) => ({
+      batting: db
+        .prepare('SELECT * FROM batting_stats WHERE player_id = ? ORDER BY season DESC, round_id')
+        .all(playerId) as Array<Record<string, number | string>>,
+      pitching: db
+        .prepare('SELECT * FROM pitching_stats WHERE player_id = ? ORDER BY season DESC, round_id')
+        .all(playerId) as Array<Record<string, number | string>>,
+    }),
 
     deletePlayer: (id: number): boolean => Number(db.prepare('DELETE FROM players WHERE id = ?').run(id).changes) > 0,
   };

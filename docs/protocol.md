@@ -22,3 +22,6 @@ Overlays hide themselves while disconnected or when no snapshot arrives for 40 s
 Writes require `Content-Type: application/json` and a same-origin `Origin` header. Errors: `400` invalid input,
 `404` not found, `409` duplicate (team name per league, external player id). Input rules: `parseTeamInput` /
 `parsePlayerInput` in `packages/core/src/roster.ts`. Storage: SQLite (`seamcast.db`), schema migrations in `apps/server/src/db.ts`.
+
+- `GET /api/players/<id>/stats` – batting and pitching lines per round with computed rates, plus totals
+- `POST /api/import/access[?dryRun=1]` – body: the `.accdb` file (`application/octet-stream`, max 50 MB); responds with an import report. Teams are matched by name, players by league id, stats by player/season/round, so imports can be repeated.
