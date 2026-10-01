@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Live Graphics for Baseball and Softball",
   "engines": {
-    "node": ">=22"
+    "node": ">=22.13"
   },
   "scripts": {
     "start": "tsx apps/server/src/index.ts",

@@ -4,7 +4,9 @@
   <meta charset="utf-8">
   <title>SeamCast – Bedienung</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
   <link rel="stylesheet" href="control.css">
+  <style>a.btn { display: inline-block; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; color: var(--text); text-decoration: none; } a.btn:hover { background: var(--btn-hover); }</style>
 </head>
 <body>
   <header>
@@ -13,6 +15,7 @@
     <span class="chip" id="chip-overlays">Overlays: 0</span>
     <span class="chip" id="chip-error" hidden></span>
     <span class="spacer"></span>
+    <a class="btn" href="/kader/">Kader</a>
     <button id="new-game" class="ghost" title="Spielstand zurücksetzen">⟲ Neues Spiel</button>
     <button id="undo" class="ghost" title="Rückgängig (U / Strg+Z)">↶ Rückgängig</button>
     <button id="toggle-scoreboard" class="primary">Scoreboard</button>
@@ -98,6 +101,8 @@
     <section class="panel">
       <h2>Spiel</h2>
       <label>Regeln <select id="rules"></select></label>
+      <label>Gast aus Kader <select id="pick-away"><option value="">– wählen –</option></select></label>
+      <label>Heim aus Kader <select id="pick-home"><option value="">– wählen –</option></select></label>
       <form id="team-away" class="team">
         <label>Gast <input name="name" maxlength="40" placeholder="Name"></label>
         <input name="short" maxlength="6" placeholder="Kürzel" aria-label="Kürzel Gast">

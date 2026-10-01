@@ -8,7 +8,7 @@ Grundsatz: Alles, was nach einem bestimmten Verein aussieht, ist **Konfiguration
 
 ## Schnellstart
 
-Voraussetzung: Node.js 22+ und pnpm.
+Voraussetzung: Node.js 22.13+ und pnpm. Die Daten (Spielstand, Mannschaften, Spieler) liegen im Ordner `./data` (SQLite-Datei `seamcast.db`).
 
 ```sh
 pnpm install
@@ -19,6 +19,8 @@ pnpm start
 - Scoreboard-Overlay: http://127.0.0.1:8080/overlay/scoreboard.html (transparent, als Browserquelle in OBS/vMix einbinden)
 
 Unter Windows reicht ein Doppelklick auf `start-seamcast.bat`: Sie aktualisiert, installiert, startet neu bei Absturz und öffnet die Bedienung im Browser.
+
+Mannschaften und Spieler pflegst du unter http://127.0.0.1:8080/kader/ und übernimmst sie in der Bedienung per Auswahl „Gast/Heim aus Kader“.
 
 Umgebungsvariablen: `SEAMCAST_HOST` (Standard `127.0.0.1`), `SEAMCAST_PORT` (`8080`), `SEAMCAST_DATA` (`./data`).
 Es gibt noch keine Anmeldung – im Zweifel nur lokal betreiben.
