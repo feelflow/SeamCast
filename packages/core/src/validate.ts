@@ -42,10 +42,14 @@ export function parseAction(input: unknown): Action | null {
       if (bases !== 1 && bases !== 2 && bases !== 3 && bases !== 4) return null;
       if (input.runners === undefined) return { type, bases };
       const r = input.runners;
-      if (!Array.isArray(r) || r.length !== 3 || !r.every((n) => isInt(n, 0, 4))) return null;
+      if (!Array.isArray(r) || r.length !== 3 || !r.every((n) => isInt(n, -1, 4))) return null;
       const runners: [number, number, number] = [r[0] as number, r[1] as number, r[2] as number];
       return { type, bases, runners };
     }
+    case 'runnerOut':
+      return input.base === 1 || input.base === 2 || input.base === 3
+        ? { type, base: input.base }
+        : null;
     case 'setBases': {
       const bases = input.bases;
       if (

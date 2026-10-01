@@ -13,6 +13,7 @@
     <span class="chip" id="chip-overlays">Overlays: 0</span>
     <span class="chip" id="chip-error" hidden></span>
     <span class="spacer"></span>
+    <button id="new-game" class="ghost" title="Spielstand zurücksetzen">⟲ Neues Spiel</button>
     <button id="undo" class="ghost" title="Rückgängig (U / Strg+Z)">↶ Rückgängig</button>
     <button id="toggle-scoreboard" class="primary">Scoreboard</button>
     <button id="hide-all" class="danger" title="Esc">Alles aus</button>
@@ -62,6 +63,12 @@
         <button class="toggle" id="base-btn-1">2B</button>
         <button class="toggle" id="base-btn-2">3B</button>
       </div>
+      <h2 class="sub">Läufer ist aus</h2>
+      <div class="grid">
+        <button id="runner-out-0">1B Out</button>
+        <button id="runner-out-1">2B Out</button>
+        <button id="runner-out-2">3B Out</button>
+      </div>
     </section>
 
     <section class="panel">
@@ -86,7 +93,6 @@
         <button data-action='{"type":"nextHalf"}'>Nächster Halbinning</button>
         <button id="new-pitcher">Neuer Pitcher</button>
       </div>
-      <div class="grid"><button id="new-game" class="danger">Neues Spiel</button></div>
     </section>
 
     <section class="panel">

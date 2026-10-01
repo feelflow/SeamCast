@@ -17,10 +17,13 @@ export type Action =
   /**
    * Treffer über 1 bis 4 Bases (4 = Homerun). Ohne `runners` rücken alle Läufer
    * um so viele Bases vor wie der Schlagmann. Mit `runners` bestimmt der Bediener,
-   * wie weit der Läufer von 1B, 2B und 3B kommt (0 = bleibt; 4 oder mehr = Run).
+   * wie weit der Läufer von 1B, 2B und 3B kommt (0 = bleibt; 4 oder mehr = Run;
+   * -1 = Läufer ist aus). Fällt dabei das letzte Out, zählen Runs dieses Spielzugs nicht.
    */
   | { type: 'hit'; bases: 1 | 2 | 3 | 4; runners?: readonly [number, number, number] }
   | { type: 'hitByPitch' }
+  /** Läufer auf 1B (1), 2B (2) oder 3B (3) ist aus, etwa nach Pickoff oder beim Steal */
+  | { type: 'runnerOut'; base: 1 | 2 | 3 }
   /** Neuer Schlagmann: Count zurücksetzen */
   | { type: 'newBatter' }
   | { type: 'setBases'; bases: readonly [boolean, boolean, boolean] }
@@ -103,15 +106,24 @@ function hit(
 ): GameState {
   const next: [boolean, boolean, boolean] = [false, false, false];
   let runs = 0;
+  let outs = 0;
   state.bases.forEach((occupied, index) => {
     if (!occupied) return;
-    const target = index + 1 + (runners ? (runners[index] ?? 0) : advance);
+    const moved = runners ? (runners[index] ?? 0) : advance;
+    if (moved < 0) {
+      outs += 1;
+      return;
+    }
+    const target = index + 1 + moved;
     if (target >= 4) runs += 1;
     else next[target - 1] = true;
   });
   if (advance >= 4) runs += 1;
   else next[advance - 1] = true;
-  return addRuns(resetCount({ ...state, bases: next }), runs);
+  const settled = resetCount({ ...state, bases: next });
+  if (outs === 0) return addRuns(settled, runs);
+  const withOuts: GameState = { ...settled, outs: state.outs + outs };
+  return withOuts.outs >= state.rules.outsPerHalfInning ? endHalf(withOuts) : addRuns(withOuts, runs);
 }
 
 export function reduce(state: GameState, action: Action): GameState {
@@ -134,6 +146,13 @@ export function reduce(state: GameState, action: Action): GameState {
       return addOut(addPitch(state));
     case 'hit':
       return hit(addPitch(state), action.bases, action.runners);
+    case 'runnerOut': {
+      if (!state.bases[action.base - 1]) return state;
+      const bases: [boolean, boolean, boolean] = [state.bases[0], state.bases[1], state.bases[2]];
+      bases[action.base - 1] = false;
+      const next: GameState = { ...state, bases, outs: state.outs + 1 };
+      return next.outs >= state.rules.outsPerHalfInning ? endHalf(next) : next;
+    }
     case 'hitByPitch':
       return walk(addPitch(state));
     case 'newBatter':

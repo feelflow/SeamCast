@@ -31,7 +31,10 @@ function render(msg) {
     `Bases ${g.bases.map((b, i) => (b ? i + 1 : '–')).join(' ')}`;
   $('lbl-away').textContent = `${g.teams.away.name} (Gast)`;
   $('lbl-home').textContent = `${g.teams.home.name} (Heim)`;
-  g.bases.forEach((on, i) => ($(`base-btn-${i}`).dataset.on = String(on)));
+  g.bases.forEach((on, i) => {
+    $(`base-btn-${i}`).dataset.on = String(on);
+    $(`runner-out-${i}`).disabled = !on;
+  });
   const fielding = g.half === 'top' ? 'home' : 'away';
   $('pitch-now').textContent = String(g.pitches[fielding]);
   $('pitch-who').textContent = `(${g.teams[fielding].short})`;
@@ -95,16 +98,23 @@ const BASE_NAMES = ['1B', '2B', '3B'];
 let pending = null; // { sig, bases, runners: [{ from, end }] }  from: 1..3, end: from..4 (4 = Run)
 
 function targetLabel(from, end) {
+  if (end === 0) return 'Out';
   if (end === from) return 'bleibt';
   return end >= 4 ? 'Run' : `→ ${BASE_NAMES[end - 1]}`;
 }
 
-/** Erlaubte Zielbases für Läufer k bei der aktuellen Auswahl der anderen. */
+/** Ziel des nächsten Läufers hinter k, der nicht aus ist (sonst der Schlagmann). */
+function behindEnd(k) {
+  for (let j = k - 1; j >= 0; j--) if (pending.runners[j].end !== 0) return pending.runners[j].end;
+  return pending.bases;
+}
+
+/** Erlaubte Ziele für Läufer k bei der aktuellen Auswahl der anderen (0 = Out). */
 function options(k) {
-  const behind = k === 0 ? pending.bases : pending.runners[k - 1].end;
+  const behind = behindEnd(k);
   const from = pending.runners[k].from;
   const lowest = Math.max(from, behind >= 4 ? 4 : behind + 1);
-  const result = [];
+  const result = [0];
   for (let end = lowest; end <= 4; end++) result.push(end);
   return result;
 }
@@ -121,8 +131,6 @@ function startHit(bases) {
   const runners = [];
   occupied.forEach((on, i) => on && runners.push({ from: i + 1, end: Math.min(i + 1 + bases, 4) }));
   pending = { sig: JSON.stringify(occupied), bases, runners };
-  // Gibt es nichts zu entscheiden (z. B. beim Triple), sofort buchen.
-  if (runners.every((_, k) => options(k).length === 1)) return confirmHit();
   renderRunners();
 }
 
@@ -136,8 +144,10 @@ function choose(k, end) {
   runners[k].end = end;
   // Wer vor dem Läufer steht, wird bei Bedarf mitgeschoben (nie zwei auf einer Base).
   for (let j = k + 1; j < runners.length; j++) {
-    if (runners[j].end <= runners[j - 1].end && runners[j - 1].end < 4) runners[j].end = runners[j - 1].end + 1;
-    else if (runners[j - 1].end >= 4) runners[j].end = 4;
+    if (runners[j].end === 0) continue;
+    const behind = behindEnd(j);
+    if (behind >= 4) runners[j].end = 4;
+    else if (runners[j].end <= behind) runners[j].end = behind + 1;
   }
   renderRunners();
 }
@@ -156,6 +166,7 @@ function renderRunners() {
       const b = document.createElement('button');
       b.textContent = targetLabel(runner.from, end);
       b.setAttribute('aria-pressed', String(runner.end === end));
+      if (end === 0) b.dataset.out = 'true';
       b.addEventListener('click', () => choose(k, end));
       row.append(b);
     }
@@ -169,7 +180,7 @@ function renderRunners() {
 function confirmHit() {
   if (!pending) return;
   const advance = [0, 0, 0];
-  for (const r of pending.runners) advance[r.from - 1] = r.end - r.from;
+  for (const r of pending.runners) advance[r.from - 1] = r.end === 0 ? -1 : r.end - r.from;
   act({ type: 'hit', bases: pending.bases, runners: advance });
   cancelHit();
 }
@@ -186,6 +197,7 @@ document.addEventListener('click', (event) => {
 });
 
 for (let i = 0; i < 3; i++) {
+  $(`runner-out-${i}`).addEventListener('click', () => act({ type: 'runnerOut', base: i + 1 }));
   $(`base-btn-${i}`).addEventListener('click', () => {
     if (!last) return;
     const bases = [...last.game.bases];

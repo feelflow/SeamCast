@@ -60,3 +60,5 @@ code { background: var(--btn); padding: 2px 6px; border-radius: 4px; }
 .runner-row button { flex: 1; padding: 8px 4px; }
 .runner-row button[aria-pressed='true'] { background: var(--accent); border-color: var(--accent); color: var(--accent-text); font-weight: 700; }
 #runners-error { color: var(--danger); }
+h2.sub { margin-top: 16px; }
+.runner-row button[data-out='true'] { color: var(--danger); }

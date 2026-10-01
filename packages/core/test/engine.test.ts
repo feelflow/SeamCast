@@ -86,6 +86,42 @@ describe('Treffer mit Läufer-Auswahl', () => {
   });
 });
 
+describe('Läufer out', () => {
+  it('Läufer-Out nimmt den Läufer von der Base und zählt ein Out, der Count bleibt', () => {
+    const start = run([
+      { type: 'setBases', bases: [true, true, false] },
+      { type: 'ball' },
+    ]);
+    const state = run([{ type: 'runnerOut', base: 2 }], start);
+    expect(state.bases).toEqual([true, false, false]);
+    expect(state.outs).toBe(1);
+    expect(state.balls).toBe(1);
+  });
+
+  it('Läufer-Out auf eine leere Base ändert nichts', () => {
+    const start = run([]);
+    expect(run([{ type: 'runnerOut', base: 1 }], start)).toBe(start);
+  });
+
+  it('drittes Out als Läufer beendet das Halbinning', () => {
+    const start = run([
+      { type: 'setBases', bases: [false, true, false] },
+      { type: 'adjustOuts', delta: 2 },
+    ]);
+    const state = run([{ type: 'runnerOut', base: 2 }], start);
+    expect(state.half).toBe('bottom');
+    expect(state.outs).toBe(0);
+  });
+
+  it('Treffer mit Läufer-Out: Out gezählt, Schlagmann auf Base', () => {
+    const start = run([{ type: 'setBases', bases: [false, true, false] }]);
+    const state = run([{ type: 'hit', bases: 1, runners: [0, -1, 0] }], start);
+    expect(state.outs).toBe(1);
+    expect(state.bases).toEqual([true, false, false]);
+    expect(state.score.away).toBe(0);
+  });
+});
+
 describe('Neues Spiel', () => {
   it('setzt alles zurück, behält aber Teams und Regeln', () => {
     const start = run([
