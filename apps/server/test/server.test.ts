@@ -169,3 +169,48 @@ describe('Speichern', () => {
     expect(state.canUndo).toBe(true);
   });
 });
+
+describe('Spielerkarten', () => {
+  it('wählt Spieler, liefert Karten im Snapshot und lehnt Unbekanntes ab', async () => {
+    const { port } = await start();
+    const control = open(port, 'control');
+    await control.ready;
+    const res = await fetch(`http://127.0.0.1:${port}/api/teams`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', origin: `http://127.0.0.1:${port}` },
+      body: JSON.stringify({ name: 'Heideköpfe', short: 'HDH' }),
+    });
+    const team = (await res.json()) as { id: number };
+    const pr = await fetch(`http://127.0.0.1:${port}/api/players`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', origin: `http://127.0.0.1:${port}` },
+      body: JSON.stringify({ teamId: team.id, firstName: 'Max', lastName: 'Muster', number: 7 }),
+    });
+    const player = (await pr.json()) as { id: number };
+
+    type CardSnap = Snap & {
+      cards: { batter: { lastName: string } | null; pitcher: { lastName: string } | null };
+      graphics: { scoreboard: boolean; batter: boolean; pitcher: boolean };
+    };
+    const untilC = control.until as unknown as (t: (s: CardSnap) => boolean) => Promise<CardSnap>;
+
+    control.send({ type: 'select', role: 'batter', side: 'away', playerId: player.id });
+    const snap = await untilC((s) => s.cards?.batter?.lastName === 'Muster');
+    expect(snap.cards.pitcher).toBeNull();
+
+    control.send({ type: 'graphics', id: 'batter', visible: true });
+    expect((await untilC((s) => s.graphics.batter === true)).graphics.batter).toBe(true);
+
+    control.send({ type: 'select', role: 'batter', side: 'away', playerId: null });
+    await untilC((s) => s.cards?.batter === null);
+
+    const errors: unknown[] = [];
+    control.ws.on('message', (d) => {
+      const m = JSON.parse(d.toString()) as { type: string };
+      if (m.type === 'error') errors.push(m);
+    });
+    control.send({ type: 'select', role: 'pitcher', side: 'home', playerId: 99999 });
+    await new Promise((r) => setTimeout(r, 100));
+    expect(errors).toHaveLength(1);
+  });
+});

@@ -3,12 +3,13 @@
 WebSocket: `ws://host:port/ws?role=overlay|control|preview` (same-origin only; default role `overlay`).
 
 Server → client, on every change and every 15 s as heartbeat:
-`{type:"snapshot", protocol:1, game, canUndo, graphics:{scoreboard:boolean}, status:{overlays,controls}, rules}`
+`{type:"snapshot", protocol:1, game, canUndo, graphics:{scoreboard,batter,pitcher:boolean}, matchup:{batter,pitcher:{away,home:playerId|null}}, cards:{batter,pitcher:Card|null}, status:{overlays,controls}, rules}`
 
 Client (role `control` only) → server:
 - `{type:"action", action}` – see `parseAction` in `packages/core/src/validate.ts`
 - `{type:"undo"}`
-- `{type:"graphics", id:"scoreboard", visible:boolean}`
+- `{type:"graphics", id:"scoreboard"|"batter"|"pitcher", visible:boolean}`
+- `{type:"select", role:"batter"|"pitcher", side:"away"|"home", playerId:number|null}` – picks the player per side; the batter card shows the batting side's pick, the pitcher card the fielding side's. Unknown ids are rejected.
 - `{type:"hideAll"}`
 
 Invalid input is answered with `{type:"error", message}`. HTTP: `GET /api/state`, `GET /api/profiles/<id>`.

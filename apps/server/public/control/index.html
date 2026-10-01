@@ -99,6 +99,17 @@
     </section>
 
     <section class="panel">
+      <h2>Spielerkarten</h2>
+      <label>Schlagmann <small id="team-batter"></small>
+        <select id="sel-batter"></select></label>
+      <button class="toggle" id="toggle-batter" data-on="false">Schlagmann einblenden</button>
+      <label class="gap">Pitcher <small id="team-pitcher"></small>
+        <select id="sel-pitcher"></select></label>
+      <button class="toggle" id="toggle-pitcher" data-on="false">Pitcher einblenden</button>
+      <p class="hint" id="cards-hint" hidden>Noch keine Spieler im Kader. Unter „Kader“ anlegen oder importieren.</p>
+    </section>
+
+    <section class="panel">
       <h2>Spiel</h2>
       <label>Regeln <select id="rules"></select></label>
       <label>Gast aus Kader <select id="pick-away"><option value="">– wählen –</option></select></label>
@@ -117,7 +128,7 @@
 
     <section class="panel wide">
       <h2>Vorschau</h2>
-      <div id="preview-box"><iframe id="preview" title="Vorschau" width="1920" height="1080" src="/overlay/scoreboard.html?role=preview"></iframe></div>
+      <div id="preview-box"><iframe id="preview" title="Vorschau Scoreboard" width="1920" height="1080" src="/overlay/scoreboard.html?role=preview"></iframe><iframe id="preview2" title="Vorschau Spielerkarten" width="1920" height="1080" src="/overlay/players.html?role=preview"></iframe></div>
       <p class="hint">Overlay-Adresse für OBS / vMix / CasparCG: <code id="overlay-url"></code></p>
     </section>
   </main>
