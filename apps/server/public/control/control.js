@@ -88,26 +88,41 @@ function connect() {
 }
 
 // --- Treffer mit Läufer-Auswahl ---------------------------------------------
+// Regeln: Läufer gehen nie zurück, der Schlagmann überholt keinen Läufer und
+// zwei Spieler stehen nie auf derselben Base. Nur erlaubte Ziele werden angeboten.
 const HIT_NAMES = { 1: 'Single', 2: 'Double', 3: 'Triple', 4: 'Homerun' };
 const BASE_NAMES = ['1B', '2B', '3B'];
-let pending = null; // { bases, advance: [a1, a2, a3] }
+let pending = null; // { sig, bases, runners: [{ from, end }] }  from: 1..3, end: from..4 (4 = Run)
 
-function targetLabel(from, advance) {
-  const target = from + advance;
-  if (advance === 0) return 'bleibt';
-  return target >= 4 ? 'Run' : `→ ${BASE_NAMES[target - 1]}`;
+function targetLabel(from, end) {
+  if (end === from) return 'bleibt';
+  return end >= 4 ? 'Run' : `→ ${BASE_NAMES[end - 1]}`;
+}
+
+/** Erlaubte Zielbases für Läufer k bei der aktuellen Auswahl der anderen. */
+function options(k) {
+  const behind = k === 0 ? pending.bases : pending.runners[k - 1].end;
+  const from = pending.runners[k].from;
+  const lowest = Math.max(from, behind >= 4 ? 4 : behind + 1);
+  const result = [];
+  for (let end = lowest; end <= 4; end++) result.push(end);
+  return result;
 }
 
 function startHit(bases) {
   if (!last) return;
   const occupied = last.game.bases;
-  // Ohne Läufer oder beim Homerun gibt es nichts zu entscheiden.
   if (bases === 4 || !occupied.some(Boolean)) {
     cancelHit();
     act({ type: 'hit', bases });
     return;
   }
-  pending = { sig: JSON.stringify(occupied), bases, advance: [0, 1, 2].map((i) => Math.min(bases, 3 - i)) };
+  // Standard: Alle rücken so weit vor wie der Schlagmann.
+  const runners = [];
+  occupied.forEach((on, i) => on && runners.push({ from: i + 1, end: Math.min(i + 1 + bases, 4) }));
+  pending = { sig: JSON.stringify(occupied), bases, runners };
+  // Gibt es nichts zu entscheiden (z. B. beim Triple), sofort buchen.
+  if (runners.every((_, k) => options(k).length === 1)) return confirmHit();
   renderRunners();
 }
 
@@ -116,47 +131,46 @@ function cancelHit() {
   $('runners').hidden = true;
 }
 
-function collision() {
-  const occupied = last.game.bases;
-  const ends = [pending.bases];
-  pending.advance.forEach((a, i) => occupied[i] && ends.push(i + 1 + a));
-  const onField = ends.filter((n) => n < 4);
-  return new Set(onField).size !== onField.length;
+function choose(k, end) {
+  const runners = pending.runners;
+  runners[k].end = end;
+  // Wer vor dem Läufer steht, wird bei Bedarf mitgeschoben (nie zwei auf einer Base).
+  for (let j = k + 1; j < runners.length; j++) {
+    if (runners[j].end <= runners[j - 1].end && runners[j - 1].end < 4) runners[j].end = runners[j - 1].end + 1;
+    else if (runners[j - 1].end >= 4) runners[j].end = 4;
+  }
+  renderRunners();
 }
 
 function renderRunners() {
-  const occupied = last.game.bases;
   $('runners-title').textContent = `${HIT_NAMES[pending.bases]}: Wohin kommen die Läufer?`;
   const rows = $('runners-rows');
   rows.replaceChildren();
-  occupied.forEach((on, i) => {
-    if (!on) return;
+  pending.runners.forEach((runner, k) => {
     const row = document.createElement('div');
     row.className = 'runner-row';
     const label = document.createElement('span');
-    label.textContent = BASE_NAMES[i];
+    label.textContent = BASE_NAMES[runner.from - 1];
     row.append(label);
-    for (let a = 0; a <= 3 - i; a++) {
+    for (const end of options(k)) {
       const b = document.createElement('button');
-      b.textContent = targetLabel(i + 1, a);
-      b.setAttribute('aria-pressed', String(pending.advance[i] === a));
-      b.addEventListener('click', () => {
-        pending.advance[i] = a;
-        renderRunners();
-      });
+      b.textContent = targetLabel(runner.from, end);
+      b.setAttribute('aria-pressed', String(runner.end === end));
+      b.addEventListener('click', () => choose(k, end));
       row.append(b);
     }
     rows.append(row);
   });
-  const bad = collision();
-  $('runners-error').hidden = !bad;
-  $('runners-ok').disabled = bad;
+  $('runners-error').hidden = true;
+  $('runners-ok').disabled = false;
   $('runners').hidden = false;
 }
 
 function confirmHit() {
-  if (!pending || collision()) return;
-  act({ type: 'hit', bases: pending.bases, runners: pending.advance });
+  if (!pending) return;
+  const advance = [0, 0, 0];
+  for (const r of pending.runners) advance[r.from - 1] = r.end - r.from;
+  act({ type: 'hit', bases: pending.bases, runners: advance });
   cancelHit();
 }
 
