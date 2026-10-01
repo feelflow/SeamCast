@@ -3,8 +3,9 @@ import { readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { WebSocketServer, type WebSocket } from 'ws';
-import { Game, RULE_PROFILES, parseAction, parsePlayerInput, parseTeamInput } from '@seamcast/core';
+import { Game, RULE_PROFILES, battingSide, fieldingSide, parseAction, parsePlayerInput, parseTeamInput } from '@seamcast/core';
 import { createRepo, openDatabase } from './db.js';
+import { buildCard, emptyMatchup, readMatchup, type Matchup } from './cards.js';
 import { importFromAccess } from './importer.js';
 import { statLines } from './statlines.js';
 import { createPersistence } from './persist.js';
@@ -32,7 +33,7 @@ export interface RunningServer {
 
 type Role = 'overlay' | 'control' | 'preview';
 
-const GRAPHIC_IDS = ['scoreboard'] as const;
+const GRAPHIC_IDS = ['scoreboard', 'batter', 'pitcher'] as const;
 type GraphicId = (typeof GRAPHIC_IDS)[number];
 type Graphics = Record<GraphicId, boolean>;
 
@@ -69,7 +70,7 @@ const CSP = [
 const PROFILE_ID = /^[a-z0-9-]{1,40}$/;
 
 function readGraphics(saved: unknown): Graphics {
-  const result: Graphics = { scoreboard: true };
+  const result: Graphics = { scoreboard: true, batter: false, pitcher: false };
   const raw = (saved as { graphics?: Record<string, unknown> } | null)?.graphics;
   if (raw && typeof raw === 'object') {
     for (const id of GRAPHIC_IDS) {
@@ -87,11 +88,12 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
   const profilesDir = path.resolve(options.profilesDir ?? path.join(repoRoot, 'config/profiles'));
 
   let game = new Game();
-  let graphics: Graphics = { scoreboard: true };
+  let graphics: Graphics = { scoreboard: true, batter: false, pitcher: false };
+  let matchup: Matchup = emptyMatchup();
 
   const persistence = createPersistence(
     path.join(dataDir, 'game.json'),
-    () => ({ ...game.snapshot(), graphics }),
+    () => ({ ...game.snapshot(), graphics, matchup }),
     log,
   );
 
@@ -101,6 +103,7 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
     if (restored) {
       game = restored;
       graphics = readGraphics(saved);
+      matchup = readMatchup(saved);
       log('Spielstand aus der letzten Sitzung wiederhergestellt.');
     } else {
       log('Gespeicherter Spielstand ist ungültig und wird ignoriert.');
@@ -122,6 +125,11 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
       game: game.state,
       canUndo: game.canUndo,
       graphics,
+      matchup,
+      cards: {
+        batter: buildCard(repo, 'batter', matchup.batter[battingSide(game.state)]),
+        pitcher: buildCard(repo, 'pitcher', matchup.pitcher[fieldingSide(game.state)]),
+      },
       status: { overlays: count('overlay'), controls: count('control') },
       rules: RULE_PROFILES,
     };
@@ -428,6 +436,17 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
         changed = graphics[input.id] !== input.visible;
         graphics = { ...graphics, [input.id]: input.visible };
         break;
+      case 'select': {
+        const side = input.side;
+        const playerId = input.playerId;
+        if ((input.role !== 'batter' && input.role !== 'pitcher') || (side !== 'away' && side !== 'home')) return reject(ws);
+        if (playerId !== null && (typeof playerId !== 'number' || !Number.isInteger(playerId) || !repo.getPlayer(playerId))) {
+          return reject(ws);
+        }
+        changed = matchup[input.role][side] !== playerId;
+        matchup = { ...matchup, [input.role]: { ...matchup[input.role], [side]: playerId } };
+        break;
+      }
       case 'hideAll':
         changed = Object.values(graphics).some(Boolean);
         graphics = Object.fromEntries(GRAPHIC_IDS.map((id) => [id, false])) as Graphics;

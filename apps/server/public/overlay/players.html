@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <title>SeamCast – Spielerkarten</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="overlay.css">
+  <link rel="stylesheet" href="players.css">
+</head>
+<body data-live="false" data-position="bottom-left">
+  <div id="cards">
+    <section class="card" id="card-batter" data-show="false">
+      <div class="num" id="batter-num"></div>
+      <div class="who">
+        <div class="role" id="batter-role"></div>
+        <div class="name"><span id="batter-first"></span> <b id="batter-last"></b></div>
+        <div class="sub" id="batter-sub"></div>
+      </div>
+      <div class="stats" id="batter-stats"></div>
+    </section>
+    <section class="card" id="card-pitcher" data-show="false">
+      <div class="num" id="pitcher-num"></div>
+      <div class="who">
+        <div class="role" id="pitcher-role"></div>
+        <div class="name"><span id="pitcher-first"></span> <b id="pitcher-last"></b></div>
+        <div class="sub" id="pitcher-sub"></div>
+      </div>
+      <div class="stats" id="pitcher-stats"></div>
+    </section>
+  </div>
+  <script src="players.js"></script>
+</body>
+</html>

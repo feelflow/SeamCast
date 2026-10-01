@@ -1,0 +1,56 @@
+#cards {
+  position: absolute;
+  display: flex;
+  gap: 1.2em;
+  font-size: calc(28px * var(--scale));
+  line-height: 1;
+  color: var(--panel-text);
+}
+body[data-position='bottom-left'] #cards { left: var(--margin); bottom: var(--margin); }
+body[data-position='bottom-right'] #cards { right: var(--margin); bottom: var(--margin); }
+body[data-position='bottom-center'] #cards { left: 50%; bottom: var(--margin); transform: translateX(-50%); }
+body[data-position='top-left'] #cards { left: var(--margin); top: var(--margin); }
+body[data-position='top-right'] #cards { right: var(--margin); top: var(--margin); }
+body[data-position='top-center'] #cards { left: 50%; top: var(--margin); transform: translateX(-50%); }
+
+body:not([data-live='true']) #cards { opacity: 0; }
+body[data-role='preview'] .card[data-show='false'] { opacity: 0.25; transform: none; }
+
+.card {
+  display: flex;
+  align-items: stretch;
+  background: var(--panel);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.card[data-show='false'] { opacity: 0; transform: translateY(14px); }
+.card[hidden] { display: none; }
+
+.num {
+  min-width: 1.9em;
+  padding: 0 0.4em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  background: var(--accent);
+  color: var(--panel);
+}
+.who { padding: 0.55em 0.9em; min-width: 7.5em; display: flex; flex-direction: column; justify-content: center; gap: 0.3em; }
+.role { font-size: 0.5em; font-weight: 700; letter-spacing: 0.12em; color: var(--accent); }
+.name { font-size: 1em; white-space: nowrap; display: flex; gap: 0.3em; }
+.name b { font-weight: 800; letter-spacing: 0.02em; }
+.sub { font-size: 0.5em; font-weight: 600; color: var(--muted); letter-spacing: 0.04em; }
+
+.stats { display: flex; border-left: 2px solid var(--accent); }
+.stat { padding: 0.55em 0.7em; min-width: 3.1em; text-align: center; display: flex; flex-direction: column; gap: 0.35em; justify-content: center; }
+.stat + .stat { border-left: 1px solid rgba(255, 255, 255, 0.12); }
+.stat small { font-size: 0.45em; font-weight: 700; letter-spacing: 0.1em; color: var(--muted); }
+.stat b { font-size: 0.85em; font-weight: 800; font-variant-numeric: tabular-nums; }
+.stat.pc b { color: var(--accent); }
+
+/* In der Vorschau liegt diese Seite über dem Scoreboard, darf also keinen eigenen Hintergrund haben */
+body[data-role='preview'] { background: transparent; }

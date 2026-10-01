@@ -140,6 +140,9 @@ export function createRepo(db: DatabaseSync) {
   }
 
   return {
+    getTeam: (id: number) => team(id),
+    getPlayer: (id: number) => player(id),
+
     listTeams: () =>
       db
         .prepare(`${teamSelect} ORDER BY t.own DESC, t.name COLLATE NOCASE`)

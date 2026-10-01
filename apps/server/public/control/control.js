@@ -43,6 +43,8 @@ function render(msg) {
   $('toggle-scoreboard').textContent = msg.graphics.scoreboard ? 'Scoreboard: AN' : 'Scoreboard: AUS';
   $('chip-overlays').textContent = `Overlays: ${msg.status.overlays}`;
 
+  renderPickers();
+  renderCardToggles();
   const select = $('rules');
   if (select.options.length === 0) {
     for (const rules of Object.values(msg.rules)) {
@@ -217,6 +219,7 @@ function fitPreview() {
   const box = $('preview-box');
   const scale = box.clientWidth / 1920;
   $('preview').style.transform = `scale(${scale})`;
+  $('preview2').style.transform = `scale(${scale})`;
   box.style.height = `${1080 * scale}px`;
 }
 window.addEventListener('resize', fitPreview);
@@ -271,11 +274,14 @@ connect();
 
 // --- Mannschaften aus dem Kader übernehmen ------------------------------------
 let rosterTeams = [];
+let rosterPlayers = [];
 async function loadRoster() {
   try {
     const res = await fetch('/api/teams');
     if (!res.ok) return;
     rosterTeams = await res.json();
+    const playersRes = await fetch('/api/players');
+    if (playersRes.ok) rosterPlayers = await playersRes.json();
   } catch {
     return;
   }
@@ -284,6 +290,8 @@ async function loadRoster() {
     select.replaceChildren(new Option('– wählen –', ''));
     for (const team of rosterTeams) select.append(new Option(`${team.name} (${team.short})`, String(team.id)));
   }
+  pickerSignature = '';
+  renderPickers();
 }
 for (const side of ['away', 'home']) {
   $(`pick-${side}`).addEventListener('change', (event) => {
@@ -294,3 +302,78 @@ for (const side of ['away', 'home']) {
 }
 loadRoster();
 window.addEventListener('focus', loadRoster);
+
+// --- Spielerkarten: Schlagmann und Pitcher wählen, einblenden -------------------
+let pickerSignature = '';
+
+function teamForSide(side) {
+  const t = last.game.teams[side];
+  const wanted = (text) => text.trim().toLocaleLowerCase('de');
+  return rosterTeams.find((x) => wanted(x.name) === wanted(t.name)) ?? rosterTeams.find((x) => wanted(x.short) === wanted(t.short)) ?? null;
+}
+
+const playerLabel = (p) => `${p.number === null ? '–' : `#${p.number}`} ${p.lastName}${p.firstName ? `, ${p.firstName}` : ''}`;
+
+function fillPicker(select, team, selectedId) {
+  select.replaceChildren(new Option('– keiner –', ''));
+  const add = (parent, p) => parent.append(new Option(playerLabel(p), String(p.id)));
+  if (team) {
+    rosterPlayers.filter((p) => p.teamId === team.id).forEach((p) => add(select, p));
+  } else {
+    for (const t of rosterTeams) {
+      const group = document.createElement('optgroup');
+      group.label = t.name;
+      rosterPlayers.filter((p) => p.teamId === t.id).forEach((p) => add(group, p));
+      if (group.children.length) select.append(group);
+    }
+  }
+  if (selectedId !== null && !select.querySelector(`option[value="${selectedId}"]`)) {
+    const p = rosterPlayers.find((x) => x.id === selectedId);
+    if (p) select.append(new Option(`${playerLabel(p)} (anderes Team)`, String(p.id)));
+  }
+  select.value = selectedId === null ? '' : String(selectedId);
+}
+
+function renderPickers() {
+  if (!last) return;
+  const g = last.game;
+  const batting = g.half === 'top' ? 'away' : 'home';
+  const fielding = batting === 'away' ? 'home' : 'away';
+  const batterId = last.matchup.batter[batting];
+  const pitcherId = last.matchup.pitcher[fielding];
+  const signature = JSON.stringify([batting, g.teams.away, g.teams.home, batterId, pitcherId, rosterPlayers.length]);
+  $('cards-hint').hidden = rosterPlayers.length > 0;
+  $('team-batter').textContent = g.teams[batting].short;
+  $('team-pitcher').textContent = g.teams[fielding].short;
+  if (signature === pickerSignature) return;
+  const busy = document.activeElement === $('sel-batter') || document.activeElement === $('sel-pitcher');
+  if (busy) return;
+  pickerSignature = signature;
+  fillPicker($('sel-batter'), teamForSide(batting), batterId);
+  fillPicker($('sel-pitcher'), teamForSide(fielding), pitcherId);
+}
+
+function renderCardToggles() {
+  for (const [id, label] of [['batter', 'Schlagmann'], ['pitcher', 'Pitcher']]) {
+    const on = Boolean(last.graphics[id]);
+    const button = $(`toggle-${id}`);
+    button.dataset.on = String(on);
+    button.textContent = on ? `${label}: AN (ausblenden)` : `${label} einblenden`;
+    button.disabled = !on && !last.cards[id];
+  }
+}
+
+for (const [role, selectId] of [['batter', 'sel-batter'], ['pitcher', 'sel-pitcher']]) {
+  $(selectId).addEventListener('change', (event) => {
+    if (!last) return;
+    const g = last.game;
+    const batting = g.half === 'top' ? 'away' : 'home';
+    const side = role === 'batter' ? batting : batting === 'away' ? 'home' : 'away';
+    const value = event.target.value;
+    send({ type: 'select', role, side, playerId: value === '' ? null : Number(value) });
+    event.target.blur();
+  });
+  $(`toggle-${role}`).addEventListener('click', () => {
+    if (last) send({ type: 'graphics', id: role, visible: !last.graphics[role] });
+  });
+}
