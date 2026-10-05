@@ -23,6 +23,7 @@ Nachfolger des alten WinForms-Tools „Baseball-TV-Manager". Besitzer: Florian H
 - Server ist maßgeblich für den Spielstand; Clients senden Befehle, der Server sendet vollständige Snapshots (bei jeder Änderung und alle 15 s).
 - Eingaben immer validieren (Same-Origin-Check, Content-Type, Längen, Wertebereiche). Neue Funktion → Tests, auch für Fehlerfälle.
 - Kein neuer Code mit Vereinsnamen, Farben oder Logos – immer über Profil/Datenbank.
+- Begriffe in der Oberfläche (Bedienung, Einstellungen): englische Baseball-Begriffe wie Hit by Pitch, At Bat, On Mound, Line Up (nicht „Aufstellung“, „Getroffen“ usw.); sonst Deutsch, z. B. „Nächstes Halbinning“. In Code, Kommentaren, Tests und Protokoll bleibt „Aufstellung“ als Fachwort erlaubt.
 - Statistik-Quoten werden aus Rohwerten berechnet (Innings als Drittel gespeichert), nie importierte Quoten verwenden.
 - Access-Import: `Players.TeamShort` enthält in Wahrheit den Teamnamen; Re-Import ist ein Upsert. Details in `apps/server/src/importer.ts`.
 

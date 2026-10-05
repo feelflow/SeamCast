@@ -437,7 +437,7 @@ function renderLineup() {
     const button = $(`lu-toggle-${side}`);
     button.dataset.on = String(on);
     button.textContent = `${g.teams[side].short || (side === 'away' ? 'Gast' : 'Heim')}: ${on ? 'AN' : 'einblenden'}`;
-    button.title = `Aufstellung ${g.teams[side].name || ''} ${on ? 'ausblenden' : 'einblenden'}`.trim();
+    button.title = `Line Up ${g.teams[side].name || ''} ${on ? 'ausblenden' : 'einblenden'}`.trim();
     button.disabled = !on && last.lineups[side].length === 0;
   }
   if (signature === lineupSignature) return;

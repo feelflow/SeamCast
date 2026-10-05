@@ -19,7 +19,7 @@ pnpm start
 - Scoreboard overlay: http://127.0.0.1:8080/overlay/scoreboard.html (transparent; add as browser source in OBS/vMix)
 - Other design: pick it on the control page under "Spiel → Design"; all overlays follow (URLs stay the same). Appending `?profile=<id>` pins an overlay to one design. Custom designs are JSON profiles in `config/profiles/`; `"design"` picks the scoreboard layout (`modern` or `tafel`), colors and labels live in the same profile. A `"scoreboard"` section in a profile overrides settings for the scoreboard only.
 - Batter/pitcher cards: http://127.0.0.1:8080/overlay/players.html – pick players on the control page under "Spielerkarten"; values come from imported season stats.
-- Lineups: http://127.0.0.1:8080/overlay/lineup.html – set the batting order under "Aufstellung" on the control page, save, then show.
+- Lineups: http://127.0.0.1:8080/overlay/lineup.html – set the batting order under "Line Up bearbeiten" on the control page (saved automatically), then show it with the buttons under "Line Up".
 
 Manage teams and players at http://127.0.0.1:8080/kader/; pick them for a game on the control page.
 
