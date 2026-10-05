@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="control.css">
-  <style>a.btn { display: inline-block; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; color: var(--text); text-decoration: none; } a.btn:hover { background: var(--btn-hover); }</style>
 </head>
 <body>
   <header>
@@ -18,144 +17,176 @@
     <a class="btn" href="/kader/">Kader</a>
     <button id="new-game" class="ghost" title="Spielstand zurücksetzen">⟲ Neues Spiel</button>
     <button id="undo" class="ghost" title="Rückgängig (U / Strg+Z)">↶ Rückgängig</button>
-    <button id="toggle-scoreboard" class="primary">Scoreboard</button>
+    <button id="toggle-scoreboard" class="primary" title="Scoreboard an/aus (G)">Scoreboard</button>
     <button id="hide-all" class="danger" title="Esc">Alles aus</button>
   </header>
 
-  <main>
-    <section class="panel summary">
-      <div class="big" id="sum-score"></div>
-      <div id="sum-state"></div>
-    </section>
+  <div id="layout">
+    <main id="col-main">
+      <section class="panel summary">
+        <div class="big" id="sum-score"></div>
+        <div id="sum-state"></div>
+      </section>
 
-    <section class="panel">
-      <h2>Wurf &amp; Aus</h2>
-      <div class="grid">
-        <button data-action='{"type":"ball"}'><kbd>B</kbd> Ball</button>
-        <button data-action='{"type":"strike"}'><kbd>S</kbd> Strike</button>
-        <button data-action='{"type":"foul"}'><kbd>F</kbd> Foul</button>
-        <button data-action='{"type":"out"}'><kbd>O</kbd> Out</button>
-        <button data-action='{"type":"hitByPitch"}'>Getroffen (HBP)</button>
-        <button data-action='{"type":"newBatter"}'><kbd>N</kbd> Neuer Batter</button>
-      </div>
-    </section>
-
-    <section class="panel">
-      <h2>Treffer</h2>
-      <div class="grid">
-        <button data-hit="1"><kbd>1</kbd> Single</button>
-        <button data-hit="2"><kbd>2</kbd> Double</button>
-        <button data-hit="3"><kbd>3</kbd> Triple</button>
-        <button data-hit="4"><kbd>4</kbd> Homerun</button>
-      </div>
-      <div id="runners" hidden>
-        <h3 id="runners-title">Wohin kommen die Läufer?</h3>
-        <div id="runners-rows"></div>
-        <p class="hint" id="runners-error" hidden></p>
-        <div class="grid">
-          <button id="runners-ok" class="primary" data-on="true">Übernehmen <kbd>Enter</kbd></button>
-          <button id="runners-cancel">Abbrechen <kbd>Esc</kbd></button>
-        </div>
-      </div>
-    </section>
-
-    <section class="panel">
-      <h2>Bases</h2>
-      <div class="grid">
-        <button class="toggle" id="base-btn-0">1B</button>
-        <button class="toggle" id="base-btn-1">2B</button>
-        <button class="toggle" id="base-btn-2">3B</button>
-      </div>
-      <h2 class="sub">Läufer ist aus</h2>
-      <div class="grid">
-        <button id="runner-out-0">1B Out</button>
-        <button id="runner-out-1">2B Out</button>
-        <button id="runner-out-2">3B Out</button>
-      </div>
-    </section>
-
-    <section class="panel">
-      <h2>Punkte</h2>
-      <div class="adjust"><span id="lbl-away"></span>
-        <button data-action='{"type":"adjustScore","side":"away","delta":-1}'>−</button>
-        <button data-action='{"type":"adjustScore","side":"away","delta":1}'>+</button></div>
-      <div class="adjust"><span id="lbl-home"></span>
-        <button data-action='{"type":"adjustScore","side":"home","delta":-1}'>−</button>
-        <button data-action='{"type":"adjustScore","side":"home","delta":1}'>+</button></div>
-    </section>
-
-    <section class="panel">
-      <h2>Spielstand</h2>
-      <div class="adjust"><span>Outs</span>
-        <button data-action='{"type":"adjustOuts","delta":-1}'>−</button>
-        <button data-action='{"type":"adjustOuts","delta":1}'>+</button></div>
-      <div class="adjust"><span>Pitches <b id="pitch-now">0</b> <small id="pitch-who"></small></span>
-        <button id="pitch-minus">−</button>
-        <button id="pitch-plus">+</button></div>
-      <div class="grid">
-        <button data-action='{"type":"nextHalf"}'>Nächster Halbinning</button>
-        <button id="new-pitcher">Neuer Pitcher</button>
-      </div>
-    </section>
-
-    <section class="panel">
-      <h2>Spielerkarten</h2>
-      <label>Schlagmann <small id="team-batter"></small>
-        <select id="sel-batter"></select></label>
-      <button class="toggle" id="toggle-batter" data-on="false">Schlagmann einblenden</button>
-      <label class="gap">Pitcher <small id="team-pitcher"></small>
-        <select id="sel-pitcher"></select></label>
-      <button class="toggle" id="toggle-pitcher" data-on="false">Pitcher einblenden</button>
-      <p class="hint" id="cards-hint" hidden>Noch keine Spieler im Kader. Unter „Kader“ anlegen oder importieren.</p>
-    </section>
-
-    <section class="panel wide" id="lineup-panel">
-      <h2>Aufstellung</h2>
-      <div class="lineup-sides">
-        <div class="lineup-side" data-side="away">
-          <h3 id="lu-title-away">Gast</h3>
-          <div class="lu-rows" id="lu-rows-away"></div>
+      <h2 class="group-title">Im Spiel</h2>
+      <div class="group">
+        <section class="panel">
+          <h2>Wurf &amp; Aus</h2>
           <div class="grid">
-            <button id="lu-save-away" class="primary">Speichern</button>
-            <button class="toggle" id="lu-toggle-away" data-on="false">Einblenden</button>
+            <button data-action='{"type":"ball"}'><kbd>B</kbd> Ball</button>
+            <button data-action='{"type":"strike"}'><kbd>S</kbd> Strike</button>
+            <button data-action='{"type":"foul"}'><kbd>F</kbd> Foul</button>
+            <button data-action='{"type":"out"}'><kbd>O</kbd> Out</button>
+            <button data-action='{"type":"hitByPitch"}'>Getroffen (HBP)</button>
+            <button data-action='{"type":"newBatter"}'><kbd>N</kbd> Neuer Batter</button>
           </div>
-        </div>
-        <div class="lineup-side" data-side="home">
-          <h3 id="lu-title-home">Heim</h3>
-          <div class="lu-rows" id="lu-rows-home"></div>
+        </section>
+
+        <section class="panel">
+          <h2>Treffer</h2>
           <div class="grid">
-            <button id="lu-save-home" class="primary">Speichern</button>
-            <button class="toggle" id="lu-toggle-home" data-on="false">Einblenden</button>
+            <button data-hit="1"><kbd>1</kbd> Single</button>
+            <button data-hit="2"><kbd>2</kbd> Double</button>
+            <button data-hit="3"><kbd>3</kbd> Triple</button>
+            <button data-hit="4"><kbd>4</kbd> Homerun</button>
           </div>
-        </div>
+          <div id="runners" hidden>
+            <h3 id="runners-title">Wohin kommen die Läufer?</h3>
+            <div id="runners-rows"></div>
+            <p class="hint" id="runners-error" hidden></p>
+            <div class="grid">
+              <button id="runners-ok" class="primary" data-on="true">Übernehmen <kbd>Enter</kbd></button>
+              <button id="runners-cancel">Abbrechen <kbd>Esc</kbd></button>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Bases</h2>
+          <div class="grid">
+            <button class="toggle" id="base-btn-0">1B</button>
+            <button class="toggle" id="base-btn-1">2B</button>
+            <button class="toggle" id="base-btn-2">3B</button>
+          </div>
+          <h2 class="sub">Läufer ist aus</h2>
+          <div class="grid">
+            <button id="runner-out-0">1B Out</button>
+            <button id="runner-out-1">2B Out</button>
+            <button id="runner-out-2">3B Out</button>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Punkte &amp; Spielstand</h2>
+          <div class="adjust"><span id="lbl-away"></span>
+            <button data-action='{"type":"adjustScore","side":"away","delta":-1}'>−</button>
+            <button data-action='{"type":"adjustScore","side":"away","delta":1}'>+</button></div>
+          <div class="adjust"><span id="lbl-home"></span>
+            <button data-action='{"type":"adjustScore","side":"home","delta":-1}'>−</button>
+            <button data-action='{"type":"adjustScore","side":"home","delta":1}'>+</button></div>
+          <div class="adjust"><span>Outs</span>
+            <button data-action='{"type":"adjustOuts","delta":-1}'>−</button>
+            <button data-action='{"type":"adjustOuts","delta":1}'>+</button></div>
+          <div class="adjust"><span>Pitches <b id="pitch-now">0</b> <small id="pitch-who"></small></span>
+            <button id="pitch-minus">−</button>
+            <button id="pitch-plus">+</button></div>
+          <div class="grid">
+            <button data-action='{"type":"nextHalf"}'>Nächster Halbinning</button>
+            <button id="new-pitcher">Neuer Pitcher</button>
+          </div>
+        </section>
       </div>
-      <p class="hint">Reihenfolge = Schlagreihenfolge. Erst „Speichern“, dann einblenden.</p>
-    </section>
 
-    <section class="panel">
-      <h2>Spiel</h2>
-      <label>Design <select id="design"></select></label>
-      <label>Regeln <select id="rules"></select></label>
-      <label>Gast aus Kader <select id="pick-away"><option value="">– wählen –</option></select></label>
-      <label>Heim aus Kader <select id="pick-home"><option value="">– wählen –</option></select></label>
-      <form id="team-away" class="team">
-        <label>Gast <input name="name" maxlength="40" placeholder="Name"></label>
-        <input name="short" maxlength="6" placeholder="Kürzel" aria-label="Kürzel Gast">
-        <button type="submit">Setzen</button>
-      </form>
-      <form id="team-home" class="team">
-        <label>Heim <input name="name" maxlength="40" placeholder="Name"></label>
-        <input name="short" maxlength="6" placeholder="Kürzel" aria-label="Kürzel Heim">
-        <button type="submit">Setzen</button>
-      </form>
-    </section>
+      <h2 class="group-title">Grafiken</h2>
+      <div class="group">
+        <section class="panel">
+          <h2>Spielerkarten</h2>
+          <label>Schlagmann <small id="team-batter"></small>
+            <select id="sel-batter"></select></label>
+          <button class="toggle" id="toggle-batter" data-on="false">Schlagmann einblenden</button>
+          <label class="gap">Pitcher <small id="team-pitcher"></small>
+            <select id="sel-pitcher"></select></label>
+          <button class="toggle" id="toggle-pitcher" data-on="false">Pitcher einblenden</button>
+          <p class="hint" id="cards-hint" hidden>Noch keine Spieler im Kader. Unter „Kader“ anlegen oder importieren.</p>
+        </section>
 
-    <section class="panel wide">
-      <h2>Vorschau</h2>
-      <div id="preview-box"><iframe id="preview" title="Vorschau Scoreboard" width="1920" height="1080" src="/overlay/scoreboard.html?role=preview"></iframe><iframe id="preview2" title="Vorschau Spielerkarten" width="1920" height="1080" src="/overlay/players.html?role=preview"></iframe></div>
-      <p class="hint">Overlay-Adresse für OBS / vMix / CasparCG: <code id="overlay-url"></code></p>
-    </section>
-  </main>
+        <section class="panel wide" id="lineup-panel">
+          <h2>Aufstellung</h2>
+          <div class="lineup-sides">
+            <div class="lineup-side" data-side="away">
+              <h3 id="lu-title-away">Gast</h3>
+              <div class="lu-rows" id="lu-rows-away"></div>
+              <div class="grid">
+                <button id="lu-save-away" class="primary">Speichern</button>
+                <button class="toggle" id="lu-toggle-away" data-on="false">Einblenden</button>
+              </div>
+            </div>
+            <div class="lineup-side" data-side="home">
+              <h3 id="lu-title-home">Heim</h3>
+              <div class="lu-rows" id="lu-rows-home"></div>
+              <div class="grid">
+                <button id="lu-save-home" class="primary">Speichern</button>
+                <button class="toggle" id="lu-toggle-home" data-on="false">Einblenden</button>
+              </div>
+            </div>
+          </div>
+          <p class="hint">Reihenfolge = Schlagreihenfolge. Erst „Speichern“, dann einblenden.</p>
+        </section>
+      </div>
+
+      <details class="setup" open>
+        <summary class="group-title">Einrichtung</summary>
+        <div class="group">
+          <section class="panel">
+            <h2>Spiel</h2>
+            <label>Design <select id="design"></select></label>
+            <label>Regeln <select id="rules"></select></label>
+          </section>
+          <section class="panel">
+            <h2>Mannschaften</h2>
+            <label>Gast aus Kader <select id="pick-away"><option value="">– wählen –</option></select></label>
+            <label>Heim aus Kader <select id="pick-home"><option value="">– wählen –</option></select></label>
+            <form id="team-away" class="team">
+              <label>Gast <input name="name" maxlength="40" placeholder="Name"></label>
+              <input name="short" maxlength="6" placeholder="Kürzel" aria-label="Kürzel Gast">
+              <button type="submit">Setzen</button>
+            </form>
+            <form id="team-home" class="team">
+              <label>Heim <input name="name" maxlength="40" placeholder="Name"></label>
+              <input name="short" maxlength="6" placeholder="Kürzel" aria-label="Kürzel Heim">
+              <button type="submit">Setzen</button>
+            </form>
+          </section>
+        </div>
+      </details>
+    </main>
+
+    <aside id="col-side">
+      <section class="panel">
+        <h2>Vorschau</h2>
+        <div id="preview-box">
+          <iframe class="preview" title="Vorschau Scoreboard" width="1920" height="1080" src="/overlay/scoreboard.html?role=preview"></iframe>
+          <iframe class="preview" title="Vorschau Spielerkarten" width="1920" height="1080" src="/overlay/players.html?role=preview"></iframe>
+          <iframe class="preview" title="Vorschau Aufstellung" width="1920" height="1080" src="/overlay/lineup.html?role=preview"></iframe>
+        </div>
+        <p class="hint">Overlay-Adresse für OBS / vMix / CasparCG: <code id="overlay-url"></code></p>
+      </section>
+
+      <section class="panel keys">
+        <h2>Tastenkürzel</h2>
+        <dl>
+          <dt><kbd>B</kbd> <kbd>S</kbd> <kbd>F</kbd> <kbd>O</kbd></dt><dd>Ball, Strike, Foul, Out</dd>
+          <dt><kbd>1</kbd>–<kbd>4</kbd> / <kbd>H</kbd></dt><dd>Single bis Homerun (H = Single)</dd>
+          <dt><kbd>Enter</kbd> <kbd>Esc</kbd></dt><dd>Läufer-Auswahl übernehmen / abbrechen</dd>
+          <dt><kbd>N</kbd></dt><dd>Neuer Batter</dd>
+          <dt><kbd>U</kbd> / <kbd>Strg</kbd>+<kbd>Z</kbd></dt><dd>Rückgängig</dd>
+          <dt><kbd>G</kbd></dt><dd>Scoreboard an/aus</dd>
+          <dt><kbd>Esc</kbd></dt><dd>Alle Grafiken aus</dd>
+        </dl>
+        <p class="hint">Die Kürzel gelten nicht, solange der Cursor in einem Eingabefeld oder einer Auswahlliste steht.</p>
+      </section>
+    </aside>
+  </div>
   <script src="control.js"></script>
 </body>
 </html>

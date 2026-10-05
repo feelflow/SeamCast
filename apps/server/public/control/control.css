@@ -22,7 +22,23 @@ h2 { margin: 0 0 10px; font-size: 13px; text-transform: uppercase; letter-spacin
 .chip { padding: 3px 10px; border-radius: 99px; background: var(--btn); font-size: 13px; }
 .chip[data-ok='true'] { background: #d9f1e2; color: #14663a; }
 #chip-error { background: #f8dada; color: #8f2323; }
-main { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; padding: 16px; max-width: 1200px; margin: 0 auto; }
+/* PC-Layout: links bedienen, rechts die Vorschau (bleibt beim Scrollen sichtbar). */
+#layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(360px, 560px); gap: 16px; padding: 16px; max-width: 1900px; margin: 0 auto; align-items: start; }
+#col-main { display: grid; gap: 14px; min-width: 0; }
+#col-side { position: sticky; top: 72px; display: grid; gap: 14px; }
+.group { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 14px; }
+.group-title { margin: 8px 0 0; padding-bottom: 4px; font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text); border-bottom: 2px solid var(--accent); }
+details.setup > summary { cursor: pointer; margin-bottom: 14px; }
+.keys dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; margin: 0; align-items: baseline; }
+.keys dt { white-space: nowrap; }
+.keys dd { margin: 0; color: var(--muted); }
+a.btn { display: inline-block; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; color: var(--text); text-decoration: none; }
+a.btn:hover { background: var(--btn-hover); }
+/* Schmale Fenster (z. B. Handy): alles untereinander, Vorschau oben. Bewusst nur ein Notbehelf, siehe Issue #6. */
+@media (max-width: 1100px) {
+  #layout { grid-template-columns: minmax(0, 1fr); }
+  #col-side { position: static; order: -1; }
+}
 .panel { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px; box-shadow: 0 1px 2px rgba(23, 35, 58, .05); }
 .panel.wide, .panel.summary { grid-column: 1 / -1; }
 .summary { display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
@@ -48,7 +64,7 @@ input, select { font: inherit; color: var(--text); background: #fff; border: 1px
 .team { display: grid; grid-template-columns: 1fr 80px auto; gap: 8px; align-items: end; margin-top: 10px; }
 .team button { padding: 8px 12px; }
 #preview-box { width: 100%; position: relative; overflow: hidden; border: 1px solid var(--line); border-radius: 8px; background: #3a3f47; }
-#preview, #preview2 { position: absolute; left: 0; top: 0; border: 0; transform-origin: 0 0; }
+.preview { position: absolute; left: 0; top: 0; border: 0; transform-origin: 0 0; }
 .hint { color: var(--muted); font-size: 13px; }
 code { background: var(--btn); padding: 2px 6px; border-radius: 4px; }
 [hidden] { display: none !important; }
