@@ -23,6 +23,7 @@ export interface ServerOptions {
   dbFile?: string;
   publicDir?: string;
   profilesDir?: string;
+  assetsDir?: string;
   log?: (message: string) => void;
 }
 
@@ -56,6 +57,9 @@ const MIME: Record<string, string> = {
   '.mp4': 'video/mp4',
   '.ico': 'image/x-icon',
 };
+
+/** Bilddateien aus config/assets (z. B. Sponsor-Logos): reiner Dateiname, nur Bildformate. */
+const ASSET_FILE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,80}\.(png|jpe?g|webp|svg)$/i;
 
 const CSP = [
   "default-src 'self'",
@@ -109,6 +113,7 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
   const dataDir = options.dataDir ?? path.join(process.cwd(), 'data');
   const publicDir = path.resolve(options.publicDir ?? path.join(here, '../public'));
   const profilesDir = path.resolve(options.profilesDir ?? path.join(repoRoot, 'config/profiles'));
+  const assetsDir = path.resolve(options.assetsDir ?? path.join(repoRoot, 'config/assets'));
 
   let game = new Game();
   let graphics: Graphics = { scoreboard: true, batter: false, pitcher: false, lineupAway: false, lineupHome: false };
@@ -393,6 +398,26 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
         return send(res, 200, JSON.stringify(profile), MIME['.json']!, head);
       } catch {
         return send(res, 404, 'Profil nicht gefunden', 'text/plain; charset=utf-8', head);
+      }
+    }
+    const assetMatch = /^\/assets\/([^/]+)$/.exec(pathname);
+    if (assetMatch) {
+      const name = assetMatch[1] ?? '';
+      if (!ASSET_FILE.test(name)) {
+        return send(res, 404, 'Nicht gefunden', 'text/plain; charset=utf-8', head);
+      }
+      try {
+        const body = await readFile(path.join(assetsDir, name));
+        res.writeHead(200, {
+          'Content-Type': MIME[path.extname(name).toLowerCase()] ?? 'application/octet-stream',
+          'Content-Length': body.length,
+          'Cache-Control': 'no-cache',
+          'X-Content-Type-Options': 'nosniff',
+          'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; sandbox",
+        });
+        return res.end(head ? undefined : body);
+      } catch {
+        return send(res, 404, 'Nicht gefunden', 'text/plain; charset=utf-8', head);
       }
     }
     return serveStatic(pathname, res, head);

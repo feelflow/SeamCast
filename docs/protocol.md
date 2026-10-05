@@ -14,7 +14,9 @@ Client (role `control` only) → server:
 - `{type:"profile", id}` – selects the graphics profile (design) for all overlays; snapshot fields `profile` (current id) and `profiles:[{id,name}]`. Overlays opened with `?profile=<id>` ignore the selection.
 - `{type:"hideAll"}`
 
-Invalid input is answered with `{type:"error", message}`. HTTP: `GET /api/state`, `GET /api/profiles/<id>`.
+Invalid input is answered with `{type:"error", message}`. HTTP: `GET /api/state`, `GET /api/profiles/<id>`, `GET /assets/<file>` (Bilddatei aus `config/assets/`, nur reiner Dateiname mit png/jpg/webp/svg; z. B. Sponsor-Logo).
+
+Profil `cards.<batter|pitcher>`: `layout` (`row` = waagerecht, Standard; `table` = senkrechte Karte mit Wertetabelle), `logo` (Dateiname in `config/assets/`), `position` (`top-left`/`top-right`/`bottom-left`/`bottom-right`; ohne Angabe reiht sich die Karte in die Gruppe `cards.position` ein), `stats` (`[Schlüssel, Beschriftung]`). Kennzahl-Schlüssel des Pitchers u. a. `era`, `whip`, `ip`, `so`, `wl` (Siege-Niederlagen, z. B. `7-1`).
 Overlays hide themselves while disconnected or when no snapshot arrives for 40 s.
 
 ## Roster API (JSON over HTTP)
