@@ -278,6 +278,7 @@ document.addEventListener('keydown', (event) => {
 });
 
 $('overlay-url').textContent = `${location.origin}/overlay/scoreboard.html`;
+$('overlay-url-players').textContent = `${location.origin}/overlay/players.html`;
 connect();
 
 // --- Mannschaften aus dem Kader übernehmen ------------------------------------
