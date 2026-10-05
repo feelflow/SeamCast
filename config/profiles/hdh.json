@@ -1,0 +1,45 @@
+{
+  "name": "Layout HDH",
+  "colors": {
+    "panel": "#0a0c24",
+    "panelText": "#ffffff",
+    "accent": "#f2b01e",
+    "muted": "#8f9bd0",
+    "scoreBg": "#ffffff",
+    "scoreText": "#0a0c24",
+    "baseOn": "#f2b01e",
+    "baseOff": "#2a2f4d",
+    "cardHead": "#2a3bb0",
+    "cardHeadEnd": "#1b2870",
+    "cardBody": "#070a1c",
+    "cardLabel": "#0e1540",
+    "cardLine": "#2a2f4d"
+  },
+  "font": {
+    "family": "'Trebuchet MS', 'Segoe UI', Arial, sans-serif",
+    "scale": 1
+  },
+  "radius": 10,
+  "labels": { "top": "▲", "bottom": "▼", "out": "OUT", "pitch": "P" },
+  "show": { "pitchCount": true, "bases": true, "count": true, "outs": true },
+  "layout": { "position": "top-left", "margin": 40 },
+  "cards": {
+    "position": "bottom-left",
+    "margin": 40,
+    "marginX": 66,
+    "marginY": 43,
+    "batter": {
+      "label": "AM SCHLAG",
+      "position": "bottom-right",
+      "stats": [["avg", "AVG"], ["obp", "OBP"], ["ops", "OPS"], ["hr", "HR"], ["rbi", "RBI"]]
+    },
+    "pitcher": {
+      "label": "PITCHER",
+      "layout": "table",
+      "position": "bottom-left",
+      "logo": "voith.jpg",
+      "pitchCount": false,
+      "stats": [["era", "ERA"], ["ip", "INNINGS"], ["so", "STRIKEOUTS"], ["wl", "WIN-LOSS"], ["whip", "WHIP"]]
+    }
+  }
+}

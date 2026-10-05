@@ -26,6 +26,7 @@ function pitching(row: Row) {
   return {
     ...row,
     ip: formatInnings(thirds),
+    wl: `${n(row, 'w')}-${n(row, 'l')}`,
     era: formatRate(era(n(row, 'er'), thirds), { digits: 2, leadingZero: true }),
     whip: formatRate(whip(n(row, 'bb'), n(row, 'h'), thirds), { digits: 2, leadingZero: true }),
   };

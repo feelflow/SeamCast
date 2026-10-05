@@ -56,6 +56,7 @@ describe('applyImport', () => {
     const lines = statLines(repo.playerStats(player.id));
     expect(lines.batting[0]).toMatchObject({ avg: '.667', obp: '.750', slg: '.667', ops: '1.417' });
     expect(lines.pitchingTotal).toMatchObject({ ip: '4.2', era: '3.86', whip: '0.86' });
+    expect(lines.pitchingTotal?.wl).toMatch(/^\d+-\d+$/);
   });
 
   it('löscht Statistik mit dem Spieler', () => {

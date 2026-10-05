@@ -280,3 +280,18 @@ describe('Design-Wahl', () => {
     expect((await (again.until as unknown as (t: (s: PSnap) => boolean) => Promise<PSnap>)((s) => Array.isArray(s.profiles))).profile).toBe('tafel');
   });
 });
+
+describe('Logo-Dateien', () => {
+  it('liefert Bilder aus config/assets und lehnt alles andere ab', async () => {
+    const { port } = await start();
+    const get = (p: string) => fetch(`http://127.0.0.1:${port}${p}`);
+    const ok = await get('/assets/voith.jpg');
+    expect(ok.status).toBe(200);
+    expect(ok.headers.get('content-type')).toBe('image/jpeg');
+    expect(ok.headers.get('content-security-policy')).toContain('sandbox');
+    expect((await get('/assets/gibt-es-nicht.png')).status).toBe(404);
+    expect((await get('/assets/hdh.json')).status).toBe(404);
+    expect((await get('/assets/..%2Fprofiles%2Fhdh.json')).status).toBe(404);
+    expect((await get('/assets/%2e%2e%2fpackage.json')).status).toBe(404);
+  });
+});

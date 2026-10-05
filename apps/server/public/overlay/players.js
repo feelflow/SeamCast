@@ -23,6 +23,7 @@ const body = document.body;
 const $ = (id) => document.getElementById(id);
 body.dataset.role = role;
 
+const CARD_POSITIONS = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
 const STALE_MS = 40000;
 let staleTimer = null;
 let config = { batter: { label: 'AM SCHLAG', stats: [] }, pitcher: { label: 'PITCHER', stats: [], pitchCount: false } };
@@ -33,7 +34,17 @@ function applyProfile(p) {
   document.documentElement.removeAttribute('style');
   const root = document.documentElement.style;
   const c = p.colors ?? {};
-  const map = { '--panel': c.panel, '--panel-text': c.panelText, '--accent': c.accent, '--muted': c.muted };
+  const map = {
+    '--panel': c.panel,
+    '--panel-text': c.panelText,
+    '--accent': c.accent,
+    '--muted': c.muted,
+    '--card-head': c.cardHead,
+    '--card-head-end': c.cardHeadEnd,
+    '--card-body': c.cardBody,
+    '--card-label': c.cardLabel,
+    '--card-line': c.cardLine,
+  };
   for (const [name, value] of Object.entries(map)) if (typeof value === 'string') root.setProperty(name, value);
   if (p.font && typeof p.font.family === 'string') root.setProperty('--font', p.font.family);
   if (p.font && typeof p.font.scale === 'number') root.setProperty('--scale', String(p.font.scale));
@@ -41,6 +52,8 @@ function applyProfile(p) {
   config = { batter: { label: 'AM SCHLAG', stats: [] }, pitcher: { label: 'PITCHER', stats: [], pitchCount: false } };
   const cards = p.cards ?? {};
   if (typeof cards.margin === 'number') root.setProperty('--margin', `${cards.margin}px`);
+  if (typeof cards.marginX === 'number') root.setProperty('--margin-x', `${cards.marginX}px`);
+  if (typeof cards.marginY === 'number') root.setProperty('--margin-y', `${cards.marginY}px`);
   if (typeof cards.position === 'string') body.dataset.position = cards.position;
   for (const kind of ['batter', 'pitcher']) if (cards[kind]) config[kind] = { ...config[kind], ...cards[kind] };
   labels = { pitch: 'P', ...(p.labels ?? {}) };
@@ -61,6 +74,21 @@ function renderCard(kind, card, visible, extras) {
   const section = $(`card-${kind}`);
   section.hidden = !card;
   if (!card) return;
+  section.dataset.layout = config[kind].layout === 'table' ? 'table' : 'row';
+  // Eigene Position je Karte (Profil: cards.<batter|pitcher>.position); ohne Angabe reiht sich die Karte in die Gruppe ein
+  const pos = CARD_POSITIONS.includes(config[kind].position) ? config[kind].position : '';
+  if (pos) section.dataset.pos = pos;
+  else delete section.dataset.pos;
+  const logo = $(`${kind}-logo`);
+  // Logo = reiner Dateiname aus config/assets (Profil: cards.<batter|pitcher>.logo)
+  const logoFile = /^[A-Za-z0-9][A-Za-z0-9._-]{0,80}$/.test(config[kind].logo ?? '') ? config[kind].logo : '';
+  if (logoFile) {
+    const src = `/assets/${logoFile}`;
+    if (logo.getAttribute('src') !== src) logo.setAttribute('src', src);
+  } else {
+    logo.removeAttribute('src');
+  }
+  logo.hidden = !logoFile;
   $(`${kind}-num`).textContent = card.number === null ? '' : String(card.number);
   $(`${kind}-num`).hidden = card.number === null;
   $(`${kind}-role`).textContent = config[kind].label ?? '';
