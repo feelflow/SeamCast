@@ -285,3 +285,6 @@ body[data-role='preview'] { background: transparent; }
 body[data-role='preview'] .card[data-layout='table'][data-show='false'] :is(.num, .who, .stat, .sponsor) { opacity: 1; }
 
 .card[hidden] { display: none; }
+
+/* Jede Karte rechnet mit ihrer eigenen Schriftgröße (Profil je Karte) */
+.card { font-size: calc(28px * var(--scale)); font-family: var(--font); }

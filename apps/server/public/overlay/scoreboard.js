@@ -2,7 +2,7 @@
 
 const params = new URLSearchParams(location.search);
 const role = params.get('role') === 'preview' ? 'preview' : 'overlay';
-// Mit ?profile=… in der Adresse bleibt das Profil fest; sonst folgt das Overlay der Wahl in der Bedienung.
+// Mit ?profile=… in der Adresse bleibt das Profil fest; sonst folgt das Overlay dem Layout dieser Grafik (Konfigurationsseite), ersatzweise dem Grundprofil.
 const fixedProfile = /^[a-z0-9-]{1,40}$/.test(params.get('profile') ?? '') ? params.get('profile') : null;
 let loadedProfile = null;
 let latest = null;
@@ -137,7 +137,7 @@ function connect() {
     }
     if (msg.type !== 'snapshot') return;
     latest = msg;
-    ensureProfile(fixedProfile ?? msg.profile ?? 'default').then(() => {
+    ensureProfile(fixedProfile ?? msg.layouts?.scoreboard ?? msg.profile ?? 'default').then(() => {
       render(latest);
       setLive(true);
       armStale();

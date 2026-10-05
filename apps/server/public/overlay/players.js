@@ -2,14 +2,18 @@
 
 const params = new URLSearchParams(location.search);
 const role = params.get('role') === 'preview' ? 'preview' : 'overlay';
-// Mit ?profile=… in der Adresse bleibt das Profil fest; sonst folgt das Overlay der Wahl in der Bedienung.
+// Mit ?profile=… in der Adresse bleibt das Profil fest; sonst folgt das Overlay dem Layout dieser Grafik (Konfigurationsseite), ersatzweise dem Grundprofil.
 const fixedProfile = /^[a-z0-9-]{1,40}$/.test(params.get('profile') ?? '') ? params.get('profile') : null;
-let loadedProfile = null;
+const KINDS = ['batter', 'pitcher'];
+// ?only=batter bzw. ?only=pitcher zeigt nur diese Karte (z. B. für die Vorschau auf der Einstellungsseite).
+const only = KINDS.includes(params.get('only')) ? params.get('only') : null;
+// Batter und Pitcher können je ein eigenes Layout haben; geladen wird je Karte.
+const loadedProfile = { batter: null, pitcher: null };
 let latest = null;
 
-async function ensureProfile(id) {
-  if (id === loadedProfile) return;
-  loadedProfile = id;
+async function ensureProfile(kind, id) {
+  if (id === loadedProfile[kind]) return;
+  loadedProfile[kind] = id;
   let p = {};
   try {
     const r = await fetch(`/api/profiles/${id}`);
@@ -17,7 +21,8 @@ async function ensureProfile(id) {
   } catch {
     // Standardwerte genügen
   }
-  applyProfile(p);
+  // Während des Ladens kann schon ein anderes Layout gewählt worden sein
+  if (loadedProfile[kind] === id) applyProfile(kind, p);
 }
 const body = document.body;
 const $ = (id) => document.getElementById(id);
@@ -28,13 +33,20 @@ const TAG_KEYS = ['pos', 'bats', 'throws', 'teamShort'];
 const CARD_POSITIONS = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
 const STALE_MS = 40000;
 let staleTimer = null;
-let config = { batter: { label: 'AM SCHLAG', stats: [] }, pitcher: { label: 'PITCHER', stats: [], pitchCount: false } };
-let labels = { pitch: 'P' };
+const defaults = () => ({
+  batter: { label: 'AM SCHLAG', stats: [] },
+  pitcher: { label: 'PITCHER', stats: [], pitchCount: false },
+});
+let config = defaults();
+const labels = { batter: { pitch: 'P' }, pitcher: { pitch: 'P' } };
+const groupSource = { batter: {}, pitcher: {} };
 const setLive = (live) => (body.dataset.live = live ? 'true' : 'false');
 
-function applyProfile(p) {
-  document.documentElement.removeAttribute('style');
-  const root = document.documentElement.style;
+/** Farben, Schrift und Maße gelten nur für die jeweilige Karte (Eigenschaften der Karte statt des ganzen Overlays). */
+function applyProfile(kind, p) {
+  const section = $(`card-${kind}`);
+  section.removeAttribute('style');
+  const root = section.style;
   const c = p.colors ?? {};
   const map = {
     '--panel': c.panel,
@@ -51,14 +63,26 @@ function applyProfile(p) {
   if (p.font && typeof p.font.family === 'string') root.setProperty('--font', p.font.family);
   if (p.font && typeof p.font.scale === 'number') root.setProperty('--scale', String(p.font.scale));
   if (typeof p.radius === 'number') root.setProperty('--radius', `${p.radius}px`);
-  config = { batter: { label: 'AM SCHLAG', stats: [] }, pitcher: { label: 'PITCHER', stats: [], pitchCount: false } };
   const cards = p.cards ?? {};
   if (typeof cards.margin === 'number') root.setProperty('--margin', `${cards.margin}px`);
   if (typeof cards.marginX === 'number') root.setProperty('--margin-x', `${cards.marginX}px`);
   if (typeof cards.marginY === 'number') root.setProperty('--margin-y', `${cards.marginY}px`);
-  if (typeof cards.position === 'string') body.dataset.position = cards.position;
-  for (const kind of ['batter', 'pitcher']) if (cards[kind]) config[kind] = { ...config[kind], ...cards[kind] };
-  labels = { pitch: 'P', ...(p.labels ?? {}) };
+  config[kind] = { ...defaults()[kind], ...(cards[kind] ?? {}) };
+  labels[kind] = { pitch: 'P', ...(p.labels ?? {}) };
+  groupSource[kind] = { position: typeof cards.position === 'string' ? cards.position : '', margin: cards.margin, marginX: cards.marginX, marginY: cards.marginY };
+  applyGroup();
+}
+
+/** Position der Kartengruppe (Karten ohne eigene Position): nach der Karte, die gerade zu sehen ist, sonst nach dem Batter. */
+function applyGroup() {
+  const kind = latest?.graphics?.pitcher && !latest?.graphics?.batter ? 'pitcher' : 'batter';
+  const g = groupSource[kind];
+  const group = $('cards').style;
+  for (const [name, value] of [['--margin', g.margin], ['--margin-x', g.marginX], ['--margin-y', g.marginY]]) {
+    if (typeof value === 'number') group.setProperty(name, `${value}px`);
+    else group.removeProperty(name);
+  }
+  if (g.position) body.dataset.position = g.position;
 }
 
 function statCell(label, value, extraClass) {
@@ -74,8 +98,8 @@ function statCell(label, value, extraClass) {
 
 function renderCard(kind, card, visible, extras) {
   const section = $(`card-${kind}`);
-  section.hidden = !card;
-  if (!card) return;
+  section.hidden = !card || (only !== null && only !== kind);
+  if (section.hidden) return;
   section.dataset.layout = ['table', 'wide'].includes(config[kind].layout) ? config[kind].layout : 'row';
   // Eigene Position je Karte (Profil: cards.<batter|pitcher>.position); ohne Angabe reiht sich die Karte in die Gruppe ein
   const pos = CARD_POSITIONS.includes(config[kind].position) ? config[kind].position : '';
@@ -136,7 +160,7 @@ function fitName(section) {
 function render(msg) {
   const g = msg.game;
   const fielding = g.half === 'top' ? 'home' : 'away';
-  const pitchCell = config.pitcher.pitchCount ? statCell(labels.pitch, String(g.pitches[fielding]), 'pc') : null;
+  const pitchCell = config.pitcher.pitchCount ? statCell(labels.pitcher.pitch, String(g.pitches[fielding]), 'pc') : null;
   renderCard('batter', msg.cards?.batter ?? null, Boolean(msg.graphics?.batter), null);
   renderCard('pitcher', msg.cards?.pitcher ?? null, Boolean(msg.graphics?.pitcher), pitchCell);
 }
@@ -160,7 +184,9 @@ function connect() {
     }
     if (msg.type !== 'snapshot') return;
     latest = msg;
-    ensureProfile(fixedProfile ?? msg.profile ?? 'default').then(() => {
+    const pick = (kind) => fixedProfile ?? msg.layouts?.[kind] ?? msg.profile ?? 'default';
+    Promise.all(KINDS.map((kind) => ensureProfile(kind, pick(kind)))).then(() => {
+      applyGroup();
       render(latest);
       setLive(true);
       armStale();

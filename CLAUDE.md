@@ -10,7 +10,7 @@ Nachfolger des alten WinForms-Tools „Baseball-TV-Manager". Besitzer: Florian H
 - `packages/core` – reine Spiellogik (Engine, Regelprofile baseball9/baseball7/softball7, Statistik-Formeln, Validierung, Roster-Typen, Access-Import-Plan). Keine I/O, gut getestet.
 - `apps/server` – Node-Server (`node:http` + `ws`), SQLite über `node:sqlite`, REST für Kader/Import/Stats, WebSocket für Spielstand.
   - `public/overlay/` – Overlays (scoreboard, players, lineup), transparent, blenden sich bei Verbindungsverlust aus.
-  - `public/control/` – Bedienung (helles Design), `public/kader/` – Mannschaften/Spieler/Import.
+  - `public/control/` – Bedienung (helles Design, nur das Wichtigste fürs Spiel), `public/config/` – Einstellungen (Layout je Grafik, Grundprofil, Regeln, Mannschaften, Overlay-Adressen), `public/kader/` – Mannschaften/Spieler/Import.
 - `docs/protocol.md` – WebSocket- und REST-Protokoll. **Bei jeder Protokolländerung mitpflegen.**
 - Persistenz: `data/game.json` (Spielstand, Grafiken, Matchup, Aufstellungen) und `data/seamcast.db` (Kader, Statistiken; Migrationen über `PRAGMA user_version`).
 
@@ -36,6 +36,7 @@ Nachfolger des alten WinForms-Tools „Baseball-TV-Manager". Besitzer: Florian H
 - Scoreboard-Overlay (oben links, 1920×1080), ein Pitchcount (nur Feldteam).
 - Kader-Datenbank (Teams, Spieler) mit Seite `/kader/`, Access-Import der alten Daten inkl. Statistik (wiederholbar).
 - Zweites Scoreboard-Design „tafel" (Vorlage des Nutzers aus dem alten Tool), Spielerkarten Batter/Pitcher (`/overlay/players.html`), Aufstellung (`/overlay/lineup.html`).
+- Eigene Einstellungsseite `/config/`: Scoreboard, Batter, Pitcher und Aufstellung haben je ein eigenes Layout (Profil) mit Live-Vorschau; „Grundprofil“ gilt für alle ohne eigene Wahl. Die Bedienung zeigt nur noch das Spielgeschehen (Einrichtung ist dorthin umgezogen).
 - Bedienung im hellen Design, Windows-Start per `start-seamcast.bat`. Der Nutzer testet in OBS (läuft).
 - Profil „Layout HDH“ (`config/profiles/hdh.json`): Pitcher-Karte (`layout: "table"`, senkrecht) und Batter-Karte (`layout: "wide"`, breit, mit Vereinslogo aus dem Kader und Position aus der Aufstellung unter der Nummer) nach seinen Loopic-Vorlagen, mit Einfahr-Animation und Sponsor-Logo. Bilder/Logos liegen in `config/assets/` und werden über `/assets/<Datei>` ausgeliefert (Profil: `logo`). Je Karte eigene `position` möglich.
 

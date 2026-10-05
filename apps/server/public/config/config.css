@@ -1,0 +1,5 @@
+#config { display: grid; gap: 14px; max-width: 1400px; margin: 0 auto; padding: 16px; }
+#config > .hint { margin: -6px 0 0; }
+.group.graphics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.pv { position: relative; overflow: hidden; margin-top: 10px; border: 1px solid var(--line); border-radius: 8px; background: #3a3f47; }
+@media (max-width: 900px) { .group.graphics { grid-template-columns: minmax(0, 1fr); } }
