@@ -7,6 +7,7 @@
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="overlay.css">
   <link rel="stylesheet" href="tafel.css">
+  <link rel="stylesheet" href="bild.css">
 </head>
 <body data-live="false" data-graphic="on" data-position="top-left">
   <div id="scoreboard">
@@ -47,6 +48,24 @@
     <div class="t-cell t-score" id="t-score-home">0</div>
     <div class="t-cell t-count" id="t-count"></div>
     <div class="t-cell t-out" id="t-out"></div>
+  </div>
+  <div id="bild" aria-hidden="true">
+    <img class="b-back" id="b-back" alt="">
+    <svg class="b-bases" id="b-bases" viewBox="0 0 60 60">
+      <polygon class="b-grass" points="30,6 54,30 30,54 6,30"/>
+      <circle class="b-mound" cx="30" cy="31" r="4"/>
+      <rect class="b-base" id="b-base-2" x="24.5" y="0.5" width="11" height="11"/>
+      <rect class="b-base" id="b-base-3" x="0.5" y="24.5" width="11" height="11"/>
+      <rect class="b-base" id="b-base-1" x="48.5" y="24.5" width="11" height="11"/>
+    </svg>
+    <div class="b-field" id="b-away"><span></span></div>
+    <div class="b-field" id="b-awayScore"><span></span></div>
+    <div class="b-field" id="b-home"><span></span></div>
+    <div class="b-field" id="b-homeScore"><span></span></div>
+    <div class="b-field" id="b-inning"><span></span></div>
+    <div class="b-field" id="b-pitch"><span></span></div>
+    <div class="b-field" id="b-count"><span></span></div>
+    <div class="b-field" id="b-out"><span></span></div>
   </div>
   <script src="scoreboard.js"></script>
 </body>
