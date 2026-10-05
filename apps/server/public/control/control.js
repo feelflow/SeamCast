@@ -301,12 +301,22 @@ function renderPickers() {
   const g = last.game;
   const batting = g.half === 'top' ? 'away' : 'home';
   const fielding = batting === 'away' ? 'home' : 'away';
-  const batterId = last.matchup.batter[batting];
-  const pitcherId = last.matchup.pitcher[fielding];
-  const signature = JSON.stringify([batting, g.teams.away, g.teams.home, batterId, pitcherId, rosterPlayers.length]);
+  const batterId = last.current.batterId;
+  const pitcherId = last.current.pitcherId;
+  const auto = last.current.auto;
+  const signature = JSON.stringify([batting, g.teams.away, g.teams.home, batterId, pitcherId, auto, rosterPlayers.length]);
   $('cards-hint').hidden = rosterPlayers.length > 0;
+  $('auto-hint').hidden = !(auto.batter || auto.pitcher);
   $('team-batter').textContent = g.teams[batting].short;
+  $('team-batter-auto').textContent = g.teams[batting].short;
   $('team-pitcher').textContent = g.teams[fielding].short;
+  $('lbl-batter').hidden = auto.batter;
+  $('batter-auto').hidden = !auto.batter;
+  const card = last.cards.batter;
+  $('auto-batter-name').textContent = card ? `${card.number === null ? '' : `#${card.number} `}${card.name}` : '–';
+  const order = last.lineups[batting].filter((x) => !(x.pos === 'P' && last.lineups[batting].some((y) => y.pos === 'DH' || y.pos === 'EH')));
+  const place = order.findIndex((x) => x.playerId === batterId) + 1;
+  $('auto-batter-pos').textContent = card ? `${place > 0 ? `Platz ${place} von ${order.length}` : ''}${card.pos ? ` · ${card.pos}` : ''}` : '';
   if (signature === pickerSignature) return;
   const busy = document.activeElement === $('sel-batter') || document.activeElement === $('sel-pitcher');
   if (busy) return;
@@ -332,13 +342,26 @@ for (const [role, selectId] of [['batter', 'sel-batter'], ['pitcher', 'sel-pitch
     const batting = g.half === 'top' ? 'away' : 'home';
     const side = role === 'batter' ? batting : batting === 'away' ? 'home' : 'away';
     const value = event.target.value;
-    send({ type: 'select', role, side, playerId: value === '' ? null : Number(value) });
+    if (role === 'pitcher' && last.current.auto.pitcher && value !== '') {
+      send({ type: 'pitcher', side, playerId: Number(value) });
+    } else {
+      send({ type: 'select', role, side, playerId: value === '' ? null : Number(value) });
+    }
     event.target.blur();
   });
   $(`toggle-${role}`).addEventListener('click', () => {
     if (last) send({ type: 'graphics', id: role, visible: !last.graphics[role] });
   });
 }
+
+const stepBatter = (delta) => {
+  if (!last) return;
+  const side = last.game.half === 'top' ? 'away' : 'home';
+  const index = Math.max(0, last.game.batterIndex[side] + delta);
+  act({ type: 'setBatterIndex', side, index });
+};
+$('batter-prev').addEventListener('click', () => stepBatter(-1));
+$('batter-next').addEventListener('click', () => stepBatter(1));
 
 // --- Aufstellung ------------------------------------------------------------
 const POSITIONS = ['', 'P', 'C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'DH', 'EH'];

@@ -88,3 +88,9 @@ label small:empty { display: none; }
 .lu-rows { display: grid; gap: 4px; margin-bottom: 8px; }
 .lu-row { display: grid; grid-template-columns: 1.6em 1fr 4.2em; gap: 6px; align-items: center; }
 .lu-row span { color: var(--muted, #667); text-align: right; }
+
+/* Spielerkarten: Schlagmann automatisch aus der Aufstellung */
+#batter-auto { margin-bottom: 10px; }
+#batter-auto .auto-title { font-size: 13px; color: var(--muted, #667); }
+#batter-auto .auto-who { font-size: 22px; font-weight: 700; margin: 2px 0; }
+#batter-auto .auto-sub { font-size: 13px; color: var(--muted, #667); margin-bottom: 8px; }

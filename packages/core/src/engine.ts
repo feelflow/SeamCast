@@ -26,6 +26,8 @@ export type Action =
   | { type: 'runnerOut'; base: 1 | 2 | 3 }
   /** Neuer Schlagmann: Count zurücksetzen */
   | { type: 'newBatter' }
+  /** Schlagmann in der Schlagreihenfolge von Hand setzen (0 = erster) */
+  | { type: 'setBatterIndex'; side: Side; index: number }
   | { type: 'setBases'; bases: readonly [boolean, boolean, boolean] }
   | { type: 'adjustScore'; side: Side; delta: number }
   /** Outs von Hand korrigieren, etwa nach einem Läufer-Out */
@@ -126,7 +128,7 @@ function hit(
   return withOuts.outs >= state.rules.outsPerHalfInning ? endHalf(withOuts) : addRuns(withOuts, runs);
 }
 
-export function reduce(state: GameState, action: Action): GameState {
+function reduceCore(state: GameState, action: Action): GameState {
   switch (action.type) {
     case 'ball': {
       const next = addPitch({ ...state, balls: state.balls + 1 });
@@ -157,6 +159,10 @@ export function reduce(state: GameState, action: Action): GameState {
       return walk(addPitch(state));
     case 'newBatter':
       return resetCount(state);
+    case 'setBatterIndex':
+      return state.batterIndex[action.side] === action.index
+        ? state
+        : { ...state, batterIndex: { ...state.batterIndex, [action.side]: action.index } };
     case 'setBases':
       return { ...state, bases: [action.bases[0], action.bases[1], action.bases[2]] };
     case 'adjustScore':
@@ -206,4 +212,33 @@ export function reduce(state: GameState, action: Action): GameState {
         ? { ...state, rules: RULE_PROFILES[action.rulesId] }
         : state;
   }
+}
+
+const BATTER_INDEX_MAX = 9999;
+
+/** Beendet diese Aktion den Schlag-Auftritt des aktuellen Schlagmanns? */
+function endsPlateAppearance(state: GameState, action: Action): boolean {
+  switch (action.type) {
+    case 'ball':
+      return state.balls + 1 >= state.rules.ballsForWalk;
+    case 'strike':
+      return state.strikes + 1 >= state.rules.strikesForStrikeout;
+    case 'out':
+    case 'hit':
+    case 'hitByPitch':
+    case 'newBatter':
+      return true;
+    default:
+      return false;
+  }
+}
+
+export function reduce(state: GameState, action: Action): GameState {
+  const next = reduceCore(state, action);
+  if (next === state || !endsPlateAppearance(state, action)) return next;
+  const side = battingSide(state);
+  return {
+    ...next,
+    batterIndex: { ...next.batterIndex, [side]: Math.min(BATTER_INDEX_MAX, next.batterIndex[side] + 1) },
+  };
 }

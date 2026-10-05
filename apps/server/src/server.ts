@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { WebSocketServer, type WebSocket } from 'ws';
 import { Game, RULE_PROFILES, battingSide, fieldingSide, parseAction, parsePlayerInput, parseTeamInput } from '@seamcast/core';
 import { createRepo, openDatabase } from './db.js';
-import { buildLineup, emptyLineups, parseSlots, readLineups, type Lineups } from './lineup.js';
+import { buildLineup, currentBatterId, currentPitcherId, emptyLineups, parseSlots, readLineups, withPitcher, type Lineups } from './lineup.js';
 import { buildCard, emptyMatchup, readMatchup, type Matchup } from './cards.js';
 import { importFromAccess } from './importer.js';
 import { statLines } from './statlines.js';
@@ -174,7 +174,21 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
 
   const count = (role: Role): number => [...clients.values()].filter((r) => r === role).length;
 
+  /** Wer gerade schlägt/pitcht: aus der Aufstellung, sonst von Hand gewählt (Auswahl). */
+  function currentPlayers() {
+    const bat = battingSide(game.state);
+    const field = fieldingSide(game.state);
+    const lineupBatter = currentBatterId(lineups[bat], game.state.batterIndex[bat]);
+    const lineupPitcher = currentPitcherId(lineups[field]);
+    return {
+      batterId: lineupBatter ?? matchup.batter[bat],
+      pitcherId: lineupPitcher ?? matchup.pitcher[field],
+      auto: { batter: lineupBatter !== null, pitcher: lineupPitcher !== null },
+    };
+  }
+
   function snapshot() {
+    const now = currentPlayers();
     return {
       type: 'snapshot',
       protocol: 1,
@@ -183,9 +197,10 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
       graphics,
       matchup,
       cards: {
-        batter: buildCard(repo, 'batter', matchup.batter[battingSide(game.state)], lineups),
-        pitcher: buildCard(repo, 'pitcher', matchup.pitcher[fieldingSide(game.state)], lineups),
+        batter: buildCard(repo, 'batter', now.batterId, lineups),
+        pitcher: buildCard(repo, 'pitcher', now.pitcherId, lineups),
       },
+      current: now,
       profile: profileId,
       layouts,
       profiles: profileList,
@@ -528,6 +543,21 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
         }
         changed = matchup[input.role][side] !== playerId;
         matchup = { ...matchup, [input.role]: { ...matchup[input.role], [side]: playerId } };
+        break;
+      }
+      case 'pitcher': {
+        const side = input.side;
+        const playerId = input.playerId;
+        if (side !== 'away' && side !== 'home') return reject(ws);
+        if (typeof playerId !== 'number' || !Number.isInteger(playerId) || !repo.getPlayer(playerId)) return reject(ws);
+        const slots = withPitcher(lineups[side], playerId);
+        if (!slots) return reject(ws);
+        const isNew = currentPitcherId(lineups[side]) !== playerId;
+        lineups = { ...lineups, [side]: slots };
+        matchup = { ...matchup, pitcher: { ...matchup.pitcher, [side]: playerId } };
+        // Neuer Pitcher beginnt bei 0 Würfen.
+        if (isNew) game.dispatch({ type: 'adjustPitches', side, delta: -game.state.pitches[side] });
+        changed = true;
         break;
       }
       case 'lineup': {

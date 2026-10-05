@@ -22,6 +22,8 @@ export interface GameState {
   bases: Bases;
   /** Würfe des Pitchers der jeweiligen Mannschaft (also der Feldmannschaft) */
   pitches: Record<Side, number>;
+  /** Zählt je Mannschaft die abgeschlossenen Schlag-Auftritte; daraus folgt der Schlagmann in der Aufstellung */
+  batterIndex: Record<Side, number>;
 }
 
 export function createGame(rulesId: RuleProfileId = 'baseball9'): GameState {
@@ -39,6 +41,7 @@ export function createGame(rulesId: RuleProfileId = 'baseball9'): GameState {
     outs: 0,
     bases: [false, false, false],
     pitches: { away: 0, home: 0 },
+    batterIndex: { away: 0, home: 0 },
   };
 }
 

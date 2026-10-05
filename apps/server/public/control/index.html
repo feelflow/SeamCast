@@ -102,13 +102,23 @@
       <div class="group">
         <section class="panel">
           <h2>Spielerkarten</h2>
-          <label>Schlagmann <small id="team-batter"></small>
+          <label id="lbl-batter">Schlagmann <small id="team-batter"></small>
             <select id="sel-batter"></select></label>
+          <div id="batter-auto" hidden>
+            <div class="auto-title">Schlagmann <small id="team-batter-auto"></small></div>
+            <div class="auto-who" id="auto-batter-name"></div>
+            <div class="auto-sub" id="auto-batter-pos"></div>
+            <div class="grid">
+              <button id="batter-prev" title="Schlagmann zurück">◀ Vorheriger</button>
+              <button id="batter-next" title="Schlagmann weiter">Nächster ▶</button>
+            </div>
+          </div>
           <button class="toggle" id="toggle-batter" data-on="false">Schlagmann einblenden</button>
           <label class="gap">Pitcher <small id="team-pitcher"></small>
             <select id="sel-pitcher"></select></label>
           <button class="toggle" id="toggle-pitcher" data-on="false">Pitcher einblenden</button>
           <p class="hint" id="cards-hint" hidden>Noch keine Spieler im Kader. Unter „Kader“ anlegen oder importieren.</p>
+          <p class="hint" id="auto-hint" hidden>Automatisch nach der Aufstellung: Nach Out, Treffer, Walk oder Strikeout kommt der nächste Schlagmann. Beim Pitcher einen anderen wählen = Pitcherwechsel (Pitchzähler startet bei 0).</p>
         </section>
 
         <section class="panel wide" id="lineup-panel">
