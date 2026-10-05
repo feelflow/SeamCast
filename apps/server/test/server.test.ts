@@ -468,4 +468,31 @@ describe('Automatische Spielerkarten', () => {
     const changed = await until((s) => s.cards?.pitcher?.lastName === 'Zwei');
     expect(changed.game.pitches.home).toBe(0);
   });
+
+  it('Pitcherwechsel über einen Zwischenschritt ohne Pitcher setzt die Würfe trotzdem zurück', async () => {
+    const { port } = await start();
+    const control = open(port, 'control');
+    await control.ready;
+    const post = async (url: string, body: unknown) =>
+      (await (await fetch(`http://127.0.0.1:${port}${url}`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', origin: `http://127.0.0.1:${port}` },
+        body: JSON.stringify(body),
+      })).json()) as { id: number };
+    const team = await post('/api/teams', { name: 'T', short: 'T' });
+    const a = await post('/api/players', { teamId: team.id, firstName: 'A', lastName: 'Eins', number: 1 });
+    const b = await post('/api/players', { teamId: team.id, firstName: 'B', lastName: 'Zwei', number: 2 });
+    type S = Snap & { game: { pitches: { home: number } }; cards: { pitcher: { lastName: string } | null } };
+    const until = control.until as unknown as (t: (s: S) => boolean) => Promise<S>;
+    control.send({ type: 'lineup', side: 'home', slots: [{ playerId: a.id, pos: 'P' }, { playerId: b.id, pos: 'C' }] });
+    await until((s) => s.cards?.pitcher?.lastName === 'Eins');
+    control.send({ type: 'action', action: { type: 'strike' } });
+    await until((s) => s.game.pitches.home === 1);
+    // Automatisches Speichern während des Bearbeitens: erst P entfernen, dann einem anderen geben
+    control.send({ type: 'lineup', side: 'home', slots: [{ playerId: a.id, pos: '' }, { playerId: b.id, pos: 'C' }] });
+    await until((s) => s.cards?.pitcher === null);
+    control.send({ type: 'lineup', side: 'home', slots: [{ playerId: a.id, pos: '' }, { playerId: b.id, pos: 'P' }] });
+    const changed = await until((s) => s.cards?.pitcher?.lastName === 'Zwei');
+    expect(changed.game.pitches.home).toBe(0);
+  });
 });

@@ -3,7 +3,7 @@ import { readFile, readdir, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { WebSocketServer, type WebSocket } from 'ws';
-import { Game, RULE_PROFILES, battingSide, fieldingSide, parseAction, parsePlayerInput, parseTeamInput } from '@seamcast/core';
+import { Game, RULE_PROFILES, battingSide, fieldingSide, parseAction, parsePlayerInput, parseTeamInput, type Side } from '@seamcast/core';
 import { createRepo, openDatabase } from './db.js';
 import { buildLineup, currentBatterId, currentPitcherId, emptyLineups, parseSlots, readLineups, withPitcher, type Lineups } from './lineup.js';
 import { buildCard, emptyMatchup, readMatchup, type Matchup } from './cards.js';
@@ -169,6 +169,7 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
   const db = openDatabase(options.dbFile ?? path.join(dataDir, 'seamcast.db'));
   const repo = createRepo(db);
 
+  const lastPitcher: Record<Side, number | null> = { away: currentPitcherId(lineups.away), home: currentPitcherId(lineups.home) };
   const clients = new Map<WebSocket, Role>();
   const alive = new WeakMap<WebSocket, boolean>();
 
@@ -554,6 +555,7 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
         if (!slots) return reject(ws);
         const isNew = currentPitcherId(lineups[side]) !== playerId;
         lineups = { ...lineups, [side]: slots };
+        lastPitcher[side] = playerId;
         matchup = { ...matchup, pitcher: { ...matchup.pitcher, [side]: playerId } };
         // Neuer Pitcher beginnt bei 0 Würfen.
         if (isNew) game.dispatch({ type: 'adjustPitches', side, delta: -game.state.pitches[side] });
@@ -566,8 +568,10 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
         if ((side !== 'away' && side !== 'home') || !slots || slots.some((x) => !repo.getPlayer(x.playerId))) return reject(ws);
         changed = JSON.stringify(lineups[side]) !== JSON.stringify(slots);
         // Anderer Pitcher in der Aufstellung = Pitcherwechsel: Würfe dieser Mannschaft starten bei 0.
-        const before = currentPitcherId(lineups[side]);
+        // Zwischenschritte ohne Pitcher (während des Bearbeitens) zählen nicht: verglichen wird mit dem zuletzt gültigen.
+        const before = lastPitcher[side];
         const after = currentPitcherId(slots);
+        if (after !== null) lastPitcher[side] = after;
         lineups = { ...lineups, [side]: slots };
         if (before !== null && after !== null && before !== after && game.state.pitches[side] > 0) {
           game.dispatch({ type: 'adjustPitches', side, delta: -game.state.pitches[side] });
