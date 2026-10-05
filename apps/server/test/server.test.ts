@@ -364,3 +364,79 @@ describe('Logo-Dateien', () => {
     expect((await get('/assets/%2e%2e%2fpackage.json')).status).toBe(404);
   });
 });
+
+describe('Automatische Spielerkarten', () => {
+  it('zeigt Schlagmann und Pitcher aus der Aufstellung und rückt weiter', async () => {
+    const { port } = await start();
+    const control = open(port, 'control');
+    await control.ready;
+    const post = async (url: string, body: unknown) =>
+      (await (await fetch(`http://127.0.0.1:${port}${url}`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', origin: `http://127.0.0.1:${port}` },
+        body: JSON.stringify(body),
+      })).json()) as { id: number };
+    const team = await post('/api/teams', { name: 'Heideköpfe', short: 'HDH' });
+    const ids: number[] = [];
+    for (const n of ['Eins', 'Zwei', 'Drei', 'Vier']) {
+      ids.push((await post('/api/players', { teamId: team.id, firstName: 'X', lastName: n, number: ids.length + 1 })).id);
+    }
+    type S = Snap & {
+      game: { pitches: { home: number }; batterIndex: { away: number } };
+      current: { auto: { batter: boolean; pitcher: boolean } };
+      cards: { batter: { lastName: string } | null; pitcher: { lastName: string } | null };
+    };
+    const until = control.until as unknown as (t: (s: S) => boolean) => Promise<S>;
+
+    // Gast schlägt: Eins, Zwei, Drei; Heim hat Pitcher Vier
+    control.send({ type: 'lineup', side: 'away', slots: ids.slice(0, 3).map((playerId) => ({ playerId, pos: '' })) });
+    control.send({ type: 'lineup', side: 'home', slots: [{ playerId: ids[3]!, pos: 'P' }] });
+    const first = await until((s) => s.cards?.batter?.lastName === 'Eins' && s.cards.pitcher?.lastName === 'Vier');
+    expect(first.current.auto).toEqual({ batter: true, pitcher: true });
+
+    control.send({ type: 'action', action: { type: 'out' } });
+    await until((s) => s.cards?.batter?.lastName === 'Zwei');
+    control.send({ type: 'action', action: { type: 'hit', bases: 1 } });
+    await until((s) => s.cards?.batter?.lastName === 'Drei');
+    control.send({ type: 'action', action: { type: 'ball' } });
+    control.send({ type: 'action', action: { type: 'newBatter' } });
+    const wrapped = await until((s) => s.cards?.batter?.lastName === 'Eins' && s.game.batterIndex.away === 3);
+    expect(wrapped.cards.batter).not.toBeNull();
+
+    // Zurück
+    control.send({ type: 'undo' });
+    await until((s) => s.cards?.batter?.lastName === 'Drei');
+
+    // Pitcherwechsel: Pitcher wird ersetzt, Würfe starten bei 0
+    control.send({ type: 'action', action: { type: 'strike' } });
+    await until((s) => s.game.pitches.home > 0);
+    control.send({ type: 'pitcher', side: 'home', playerId: ids[0]! });
+    const changed = await until((s) => s.cards?.pitcher?.lastName === 'Eins');
+    expect(changed.game.pitches.home).toBe(0);
+
+    // Manuelle Korrektur des Schlagmanns
+    control.send({ type: 'action', action: { type: 'setBatterIndex', side: 'away', index: 1 } });
+    await until((s) => s.cards?.batter?.lastName === 'Zwei');
+
+    const errors: unknown[] = [];
+    control.ws.on('message', (d) => {
+      const m = JSON.parse(d.toString()) as { type: string };
+      if (m.type === 'error') errors.push(m);
+    });
+    control.send({ type: 'pitcher', side: 'home', playerId: 99999 });
+    control.send({ type: 'pitcher', side: 'x', playerId: ids[0] });
+    control.send({ type: 'pitcher', side: 'home' });
+    await new Promise((r) => setTimeout(r, 100));
+    expect(errors).toHaveLength(3);
+  });
+
+  it('ohne Aufstellung gilt weiter die Handauswahl', async () => {
+    const { port } = await start();
+    const control = open(port, 'control');
+    await control.ready;
+    type S = Snap & { current: { auto: { batter: boolean; pitcher: boolean } } };
+    const until = control.until as unknown as (t: (s: S) => boolean) => Promise<S>;
+    const snap = await until((s) => s.current !== undefined);
+    expect(snap.current.auto).toEqual({ batter: false, pitcher: false });
+  });
+});

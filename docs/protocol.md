@@ -3,13 +3,15 @@
 WebSocket: `ws://host:port/ws?role=overlay|control|preview` (same-origin only; default role `overlay`).
 
 Server → client, on every change and every 15 s as heartbeat:
-`{type:"snapshot", protocol:1, game, canUndo, graphics:{scoreboard,batter,pitcher:boolean}, matchup:{batter,pitcher:{away,home:playerId|null}}, cards:{batter,pitcher:Card|null}, status:{overlays,controls}, rules}`
+`{type:"snapshot", protocol:1, game, canUndo, graphics:{scoreboard,batter,pitcher:boolean}, current, matchup:{batter,pitcher:{away,home:playerId|null}}, cards:{batter,pitcher:Card|null}, status:{overlays,controls}, rules}`
 
 Client (role `control` only) → server:
 - `{type:"action", action}` – see `parseAction` in `packages/core/src/validate.ts`
 - `{type:"undo"}`
 - `{type:"graphics", id:"scoreboard"|"batter"|"pitcher", visible:boolean}`
 - `{type:"select", role:"batter"|"pitcher", side:"away"|"home", playerId:number|null}` – picks the player per side; the batter card shows the batting side's pick, the pitcher card the fielding side's. Unknown ids are rejected.
+- `{type:"pitcher", side, playerId}` – Pitcherwechsel: der Spieler bekommt in der Aufstellung die Position `P` (der bisherige Pitcher verliert sie; steht der Spieler nicht darin, ersetzt er ihn an dessen Platz, sonst wird er angehängt). Der Pitchcount dieser Mannschaft startet bei 0. Unbekannte Ids/Seiten werden abgelehnt.
+- Automatische Karten: Snapshot-Feld `current:{batterId, pitcherId, auto:{batter,pitcher}}`. Schlagmann = Eintrag `game.batterIndex[Schlagseite]` (modulo Länge) der Schlagreihenfolge = Aufstellung der schlagenden Mannschaft; gibt es einen `DH`/`EH`, fällt `P` heraus. Pitcher = Slot mit `pos:"P"` der Feldmannschaft. Ohne Aufstellung (bzw. ohne `P`) gilt die Auswahl aus `select` (`auto.*` = false). Aktion `{type:"setBatterIndex", side, index}` stellt den Schlagmann von Hand. `batterIndex` wächst bei Out, Hit, Hit-by-Pitch, Walk, Strikeout und „Neuer Batter“; Rückgängig stellt es wieder her.
 - `{type:"lineup", side, slots:[{playerId, pos}]}` – batting order of a team (max 12, unique players, `pos` ≤ 3 chars); snapshot field `lineups:{away,home:[{order,playerId,number,firstName,lastName,pos}]}`; graphic ids `lineupAway` / `lineupHome`
 - `{type:"profile", id}` – selects the graphics profile (design) for all overlays; snapshot fields `profile` (current id) and `profiles:[{id,name}]`. Overlays opened with `?profile=<id>` ignore the selection.
 - `{type:"layout", graphic:"scoreboard"|"batter"|"pitcher"|"lineup", id:string|null}` – wählt das Layout (Profil) **nur** für diese Grafik; `id:null` = folgt wieder dem Grundprofil (`profile`). Snapshot-Feld `layouts:{scoreboard,batter,pitcher,lineup: id|null}`, wird in `game.json` gespeichert. Ein Overlay nimmt `?profile=` vor `layouts[<Grafik>]` vor `profile`. Die Aufstellung (Gast und Heim) teilt sich ein Layout. Der Batter- und der Pitcher-Kartenteil von `players.html` laden ihr Profil getrennt; `players.html?only=batter|pitcher` zeigt nur eine Karte (Vorschau auf `/config/`).

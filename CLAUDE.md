@@ -60,6 +60,8 @@ Neue Aufgabe zu SeamCast: erst hier das passende Thema suchen, dann `gh api repo
 
 | 22 | Anzeige der Spieler | fertig | Layout HDH für Pitcher- und Batter-Karte. Die Position (z. B. „3B“) kommt aus der Aufstellung des Spiels (`pos` je Slot), nicht aus dem Kader; steht der Spieler in keiner Aufstellung, bleibt die Zeile leer. Vereinslogo: Datei in `config/assets/`, Dateiname beim Team im Kader eintragen. Karten werden nie gleichzeitig gezeigt. Neue Vorlagen immer so lesen: Loopic-HTML parsen, Maße/Zeiten/Bilder extrahieren, als Layout nachbauen. |
 
+Spielerkarten automatisch (Issue #31): Schlagmann = Aufstellung der schlagenden Mannschaft, Platz `game.batterIndex[Seite]`, rückt bei Out/Hit/Walk/Strikeout/HBP/„Neuer Batter“ weiter (Rückgängig stellt her); Pitcher = Slot `P` der Feldmannschaft, Wechsel per `pitcher`-Befehl (Pitchcount auf 0). Ohne Aufstellung bleibt die Handauswahl (`select`).
+
 Weitere Ideen (noch ohne Issue): Aufstellung automatisch mit aktuellem Schlagmann koppeln, Spielerfotos, Ergebnis-/Inning-Tabelle als Grafik, Tastaturkürzel erweitern, Bedienung am Handy (Layout für schmale Bildschirme, große Tasten; aus #6 ausgegliedert, nicht eilig; hängt mit #9 Zugriffsschutz zusammen).
 
 ## Nutzer

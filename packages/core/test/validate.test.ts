@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseAction } from '../src/index.js';
+import { createGame, parseAction, parseGameState } from '../src/index.js';
 
 describe('parseAction', () => {
   it('akzeptiert einfache Aktionen und verwirft Zusatzfelder', () => {
@@ -43,5 +43,20 @@ describe('parseAction', () => {
     expect(parseAction({})).toBeNull();
     expect(parseAction({ type: 'drop table' })).toBeNull();
     expect(parseAction({ type: '__proto__' })).toBeNull();
+  });
+});
+
+describe('setBatterIndex und alter Spielstand', () => {
+  it('prüft Seite und Bereich', () => {
+    expect(parseAction({ type: 'setBatterIndex', side: 'away', index: 3 })).toEqual({ type: 'setBatterIndex', side: 'away', index: 3 });
+    expect(parseAction({ type: 'setBatterIndex', side: 'x', index: 3 })).toBeNull();
+    expect(parseAction({ type: 'setBatterIndex', side: 'home', index: -1 })).toBeNull();
+    expect(parseAction({ type: 'setBatterIndex', side: 'home', index: 1.5 })).toBeNull();
+  });
+
+  it('liest alte Spielstände ohne batterIndex mit 0, lehnt kaputte ab', () => {
+    const { batterIndex: _unused, ...old } = createGame();
+    expect(parseGameState(old)?.batterIndex).toEqual({ away: 0, home: 0 });
+    expect(parseGameState({ ...old, batterIndex: { away: -1, home: 0 } })).toBeNull();
   });
 });

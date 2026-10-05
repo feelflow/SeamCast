@@ -50,6 +50,10 @@ export function parseAction(input: unknown): Action | null {
       return input.base === 1 || input.base === 2 || input.base === 3
         ? { type, base: input.base }
         : null;
+    case 'setBatterIndex':
+      return isSide(input.side) && isInt(input.index, 0, 9999)
+        ? { type, side: input.side, index: input.index }
+        : null;
     case 'setBases': {
       const bases = input.bases;
       if (
@@ -107,6 +111,10 @@ export function parseGameState(input: unknown): GameState | null {
   ) {
     return null;
   }
+  const batterIndex = input.batterIndex;
+  if (batterIndex !== undefined && (!isObject(batterIndex) || !isInt(batterIndex.away, 0, 9999) || !isInt(batterIndex.home, 0, 9999))) {
+    return null;
+  }
   if (!isInt(input.inning, 1, 99)) return null;
   if (input.half !== 'top' && input.half !== 'bottom') return null;
   if (!isInt(input.balls, 0, 9) || !isInt(input.strikes, 0, 9) || !isInt(input.outs, 0, 9)) {
@@ -127,5 +135,8 @@ export function parseGameState(input: unknown): GameState | null {
     outs: input.outs,
     bases: [bases[0] as boolean, bases[1] as boolean, bases[2] as boolean],
     pitches: { away: pitches.away, home: pitches.home },
+    batterIndex: isObject(batterIndex)
+      ? { away: batterIndex.away as number, home: batterIndex.home as number }
+      : { away: 0, home: 0 },
   };
 }

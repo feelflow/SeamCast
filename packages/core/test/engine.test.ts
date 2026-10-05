@@ -267,3 +267,52 @@ describe('Game (Rückgängig und Wiederherstellung)', () => {
     expect(Game.fromSnapshot({ version: 2 })).toBeNull();
   });
 });
+
+describe('Schlagreihenfolge (batterIndex)', () => {
+  const index = (state: GameState) => state.batterIndex;
+
+  it('beginnt bei 0 für beide Mannschaften', () => {
+    expect(index(createGame())).toEqual({ away: 0, home: 0 });
+  });
+
+  it('rückt nach Out, Hit, Walk, Strikeout, HBP und „Neuer Batter“ weiter', () => {
+    expect(index(run([{ type: 'out' }]))).toEqual({ away: 1, home: 0 });
+    expect(index(run([{ type: 'hit', bases: 1 }]))).toEqual({ away: 1, home: 0 });
+    expect(index(run(times(4, { type: 'ball' })))).toEqual({ away: 1, home: 0 });
+    expect(index(run(times(3, { type: 'strike' })))).toEqual({ away: 1, home: 0 });
+    expect(index(run([{ type: 'hitByPitch' }]))).toEqual({ away: 1, home: 0 });
+    expect(index(run([{ type: 'newBatter' }]))).toEqual({ away: 1, home: 0 });
+  });
+
+  it('bleibt bei Ball, Strike, Foul, Läufer-Out und Korrekturen gleich', () => {
+    const state = run([
+      { type: 'ball' },
+      { type: 'strike' },
+      { type: 'foul' },
+      { type: 'setBases', bases: [true, false, false] },
+      { type: 'runnerOut', base: 1 },
+      { type: 'adjustOuts', delta: 1 },
+    ]);
+    expect(index(state)).toEqual({ away: 0, home: 0 });
+  });
+
+  it('zählt für die schlagende Mannschaft, auch beim dritten Out', () => {
+    const state = run([...times(3, { type: 'out' }), { type: 'out' }]);
+    expect(state.half).toBe('bottom');
+    expect(index(state)).toEqual({ away: 3, home: 1 });
+  });
+
+  it('Rückgängig stellt den Schlagmann wieder her', () => {
+    const game = new Game();
+    game.dispatch({ type: 'out' });
+    game.undo();
+    expect(game.state.batterIndex).toEqual({ away: 0, home: 0 });
+  });
+
+  it('Neues Spiel setzt zurück; setBatterIndex setzt von Hand', () => {
+    const set = run([{ type: 'setBatterIndex', side: 'home', index: 4 }]);
+    expect(index(set)).toEqual({ away: 0, home: 4 });
+    expect(reduce(set, { type: 'setBatterIndex', side: 'home', index: 4 })).toBe(set);
+    expect(index(run([{ type: 'newGame' }], set))).toEqual({ away: 0, home: 0 });
+  });
+});
