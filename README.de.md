@@ -17,7 +17,7 @@ pnpm start
 
 - Bedienung: http://127.0.0.1:8080/control/
 - Scoreboard-Overlay: http://127.0.0.1:8080/overlay/scoreboard.html (transparent, als Browserquelle in OBS/vMix einbinden)
-- Anderes Design: `?profile=tafel` an die Scoreboard-Adresse hängen (klassische Anzeigetafel). Eigene Designs sind JSON-Profile in `config/profiles/`; `"design"` wählt das Layout (`modern` oder `tafel`), Farben und Beschriftungen stehen im selben Profil.
+- Anderes Design: in der Bedienung unter „Spiel → Design“ wählen, alle Overlays folgen (die Adressen bleiben gleich). Mit `?profile=<id>` in der Adresse lässt sich ein Overlay fest auf ein Design stellen. Eigene Designs sind JSON-Profile in `config/profiles/`; `"design"` wählt das Layout (`modern` oder `tafel`), Farben und Beschriftungen stehen im selben Profil.
 - Spielerkarten (Schlagmann/Pitcher): http://127.0.0.1:8080/overlay/players.html – Spieler wählst du in der Bedienung unter „Spielerkarten“, Werte stammen aus den importierten Saisonstatistiken.
 - Aufstellung: http://127.0.0.1:8080/overlay/lineup.html – Schlagreihenfolge unter „Aufstellung“ in der Bedienung pflegen, speichern, einblenden.
 

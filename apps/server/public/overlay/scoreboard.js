@@ -2,7 +2,23 @@
 
 const params = new URLSearchParams(location.search);
 const role = params.get('role') === 'preview' ? 'preview' : 'overlay';
-const profileId = /^[a-z0-9-]{1,40}$/.test(params.get('profile') ?? '') ? params.get('profile') : 'default';
+// Mit ?profile=… in der Adresse bleibt das Profil fest; sonst folgt das Overlay der Wahl in der Bedienung.
+const fixedProfile = /^[a-z0-9-]{1,40}$/.test(params.get('profile') ?? '') ? params.get('profile') : null;
+let loadedProfile = null;
+let latest = null;
+
+async function ensureProfile(id) {
+  if (id === loadedProfile) return;
+  loadedProfile = id;
+  let p = {};
+  try {
+    const r = await fetch(`/api/profiles/${id}`);
+    if (r.ok) p = await r.json();
+  } catch {
+    // Standardwerte genügen
+  }
+  applyProfile(p);
+}
 const body = document.body;
 const $ = (id) => document.getElementById(id);
 
@@ -16,6 +32,7 @@ function setLive(live) {
 }
 
 function applyProfile(p) {
+  document.documentElement.removeAttribute('style');
   const root = document.documentElement.style;
   const c = p.colors ?? {};
   const map = {
@@ -119,9 +136,12 @@ function connect() {
       return;
     }
     if (msg.type !== 'snapshot') return;
-    render(msg);
-    setLive(true);
-    armStale();
+    latest = msg;
+    ensureProfile(fixedProfile ?? msg.profile ?? 'default').then(() => {
+      render(latest);
+      setLive(true);
+      armStale();
+    });
   });
   ws.addEventListener('close', () => {
     setLive(false);
@@ -131,10 +151,4 @@ function connect() {
   ws.addEventListener('error', () => ws.close());
 }
 
-fetch(`/api/profiles/${profileId}`)
-  .then((r) => (r.ok ? r.json() : {}))
-  .catch(() => ({}))
-  .then((p) => {
-    applyProfile(p);
-    connect();
-  });
+connect();

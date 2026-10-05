@@ -1,5 +1,5 @@
 import http from 'node:http';
-import { readFile, stat } from 'node:fs/promises';
+import { readFile, readdir, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { WebSocketServer, type WebSocket } from 'ws';
@@ -70,6 +70,28 @@ const CSP = [
 
 const PROFILE_ID = /^[a-z0-9-]{1,40}$/;
 
+/** Alle Grafikprofile im Ordner: Kennung und Anzeigename. */
+async function listProfiles(dir: string): Promise<Array<{ id: string; name: string }>> {
+  const result: Array<{ id: string; name: string }> = [];
+  let files: string[] = [];
+  try {
+    files = (await readdir(dir)).sort();
+  } catch {
+    return [{ id: 'default', name: 'Standard' }];
+  }
+  for (const file of files) {
+    const id = file.replace(/\.json$/, '');
+    if (!file.endsWith('.json') || !PROFILE_ID.test(id)) continue;
+    try {
+      const parsed = JSON.parse(await readFile(path.join(dir, file), 'utf8')) as { name?: unknown };
+      result.push({ id, name: typeof parsed.name === 'string' ? parsed.name : id });
+    } catch {
+      // kaputte Profildatei überspringen
+    }
+  }
+  return result.length ? result : [{ id: 'default', name: 'Standard' }];
+}
+
 function readGraphics(saved: unknown): Graphics {
   const result: Graphics = { scoreboard: true, batter: false, pitcher: false, lineupAway: false, lineupHome: false };
   const raw = (saved as { graphics?: Record<string, unknown> } | null)?.graphics;
@@ -92,10 +114,12 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
   let graphics: Graphics = { scoreboard: true, batter: false, pitcher: false, lineupAway: false, lineupHome: false };
   let matchup: Matchup = emptyMatchup();
   let lineups: Lineups = emptyLineups();
+  let profileId = 'default';
+  const profileList = await listProfiles(profilesDir);
 
   const persistence = createPersistence(
     path.join(dataDir, 'game.json'),
-    () => ({ ...game.snapshot(), graphics, matchup, lineups }),
+    () => ({ ...game.snapshot(), graphics, matchup, lineups, profile: profileId }),
     log,
   );
 
@@ -107,6 +131,8 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
       graphics = readGraphics(saved);
       matchup = readMatchup(saved);
       lineups = readLineups(saved);
+      const savedProfile = (saved as { profile?: unknown }).profile;
+      if (typeof savedProfile === 'string' && profileList.some((x) => x.id === savedProfile)) profileId = savedProfile;
       log('Spielstand aus der letzten Sitzung wiederhergestellt.');
     } else {
       log('Gespeicherter Spielstand ist ungültig und wird ignoriert.');
@@ -133,6 +159,8 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
         batter: buildCard(repo, 'batter', matchup.batter[battingSide(game.state)]),
         pitcher: buildCard(repo, 'pitcher', matchup.pitcher[fieldingSide(game.state)]),
       },
+      profile: profileId,
+      profiles: profileList,
       lineups: { away: buildLineup(repo, lineups.away), home: buildLineup(repo, lineups.home) },
       status: { overlays: count('overlay'), controls: count('control') },
       rules: RULE_PROFILES,
@@ -460,6 +488,12 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
         if ((side !== 'away' && side !== 'home') || !slots || slots.some((x) => !repo.getPlayer(x.playerId))) return reject(ws);
         changed = JSON.stringify(lineups[side]) !== JSON.stringify(slots);
         lineups = { ...lineups, [side]: slots };
+        break;
+      }
+      case 'profile': {
+        if (typeof input.id !== 'string' || !profileList.some((x) => x.id === input.id)) return reject(ws);
+        changed = profileId !== input.id;
+        profileId = input.id;
         break;
       }
       case 'hideAll':

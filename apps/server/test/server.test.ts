@@ -248,3 +248,35 @@ describe('Aufstellung', () => {
     expect(errors).toHaveLength(3);
   });
 });
+
+describe('Design-Wahl', () => {
+  it('wechselt das Profil für alle, merkt es sich und lehnt Unbekanntes ab', async () => {
+    const { port } = await start();
+    const control = open(port, 'control');
+    await control.ready;
+    type PSnap = Snap & { profile: string; profiles: Array<{ id: string }> };
+    const untilP = control.until as unknown as (t: (s: PSnap) => boolean) => Promise<PSnap>;
+    const first = await untilP((s) => Array.isArray(s.profiles));
+    expect(first.profile).toBe('default');
+    expect(first.profiles.map((p) => p.id)).toContain('tafel');
+
+    control.send({ type: 'profile', id: 'tafel' });
+    await untilP((s) => s.profile === 'tafel');
+
+    const errors: unknown[] = [];
+    control.ws.on('message', (d) => {
+      const m = JSON.parse(d.toString()) as { type: string };
+      if (m.type === 'error') errors.push(m);
+    });
+    control.send({ type: 'profile', id: '../geheim' });
+    control.send({ type: 'profile', id: 'gibt-es-nicht' });
+    await new Promise((r) => setTimeout(r, 100));
+    expect(errors).toHaveLength(2);
+
+    await server?.close();
+    server = await startServer({ port: 0, dataDir: dir, log: () => {} });
+    const again = open(server.port, 'control');
+    await again.ready;
+    expect((await (again.until as unknown as (t: (s: PSnap) => boolean) => Promise<PSnap>)((s) => Array.isArray(s.profiles))).profile).toBe('tafel');
+  });
+});
