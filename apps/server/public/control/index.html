@@ -37,12 +37,11 @@
             <button data-action='{"type":"ball"}'><kbd>B</kbd> Ball</button>
             <button data-action='{"type":"strike"}'><kbd>S</kbd> Strike</button>
             <button data-action='{"type":"foul"}'><kbd>F</kbd> Foul</button>
-            <button data-action='{"type":"out"}'><kbd>O</kbd> Out</button>
+            <button id="out-btn" title="Schlagmann aus; bei Läufern auf Base fragt SeamCast, wohin sie kommen"><kbd>O</kbd> Out</button>
             <button data-action='{"type":"hitByPitch"}'>Getroffen (HBP)</button>
             <button data-action='{"type":"newBatter"}'><kbd>N</kbd> Neuer Batter</button>
-            <button data-action='{"type":"intentionalWalk"}' title="Absichtlicher Walk, kein Pitch gezählt">Absichtl. Walk</button>
+            <button data-action='{"type":"intentionalWalk"}' title="Absichtlicher Walk, kein Pitch gezählt">Intentional Walk</button>
             <button data-action='{"type":"balk"}' title="Alle Läufer eine Base weiter">Balk</button>
-            <button id="out-runners" title="Schlagmann aus, Läufer rücken vor oder sind aus (Sac Fly, Doppelspiel)">Out + Läufer</button>
           </div>
         </section>
 
@@ -72,9 +71,9 @@
             <button class="toggle" id="base-btn-1">2B</button>
             <button class="toggle" id="base-btn-2">3B</button>
           </div>
-          <h2 class="sub">Läufer bewegen</h2>
+          <h2 class="sub">Läufer</h2>
           <div class="grid">
-            <button id="advance-runners" title="Steal, Wild Pitch, Passed Ball, Caught Stealing">Läufer rücken vor</button>
+            <button id="advance-runners" title="Steal, Wild Pitch, Passed Ball, Caught Stealing">Base Stealing</button>
           </div>
           <h2 class="sub">Läufer ist aus</h2>
           <div class="grid">

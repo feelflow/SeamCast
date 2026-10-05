@@ -152,7 +152,7 @@ function choose(k, end) {
 }
 
 function renderRunners() {
-  const titles = { out: 'Out: Wohin kommen die Läufer?', advance: 'Läufer rücken vor: Wohin?' };
+  const titles = { out: 'Out: Wohin kommen die Läufer?', advance: 'Base Stealing: Wohin kommen die Läufer?' };
   $('runners-title').textContent = pending.kind === 'hit' ? `${HIT_NAMES[pending.bases]}: Wohin kommen die Läufer?` : titles[pending.kind];
   const rows = $('runners-rows');
   rows.replaceChildren();
@@ -189,7 +189,7 @@ function confirmHit() {
 document.querySelectorAll('button[data-hit]').forEach((button) =>
   button.addEventListener('click', () => startHit(Number(button.dataset.hit))),
 );
-$('out-runners').addEventListener('click', () => startPlay('out'));
+$('out-btn').addEventListener('click', () => startPlay('out'));
 $('advance-runners').addEventListener('click', () => startPlay('advance'));
 $('runners-ok').addEventListener('click', confirmHit);
 $('runners-cancel').addEventListener('click', cancelHit);
@@ -246,7 +246,7 @@ document.addEventListener('keydown', (event) => {
   } else if (key === 'b') act({ type: 'ball' });
   else if (key === 's') act({ type: 'strike' });
   else if (key === 'f') act({ type: 'foul' });
-  else if (key === 'o') act({ type: 'out' });
+  else if (key === 'o') startPlay('out');
   else if (key === 'n') act({ type: 'newBatter' });
   else if (key === 'g') {
     if (last) send({ type: 'graphics', id: 'scoreboard', visible: !last.graphics.scoreboard });
