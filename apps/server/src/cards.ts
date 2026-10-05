@@ -33,6 +33,8 @@ export interface Card {
   lastName: string;
   number: number | null;
   teamShort: string;
+  /** Logo-Datei der Mannschaft (reiner Dateiname aus dem Kader, liegt in config/assets); leer, wenn keine hinterlegt ist */
+  teamLogo: string;
   bats: string;
   throws: string;
   /** Alle verfügbaren Kennzahlen als Text; welche gezeigt werden, bestimmt das Profil */
@@ -60,6 +62,7 @@ export function buildCard(repo: Repo, role: 'batter' | 'pitcher', playerId: numb
     lastName: player.lastName,
     number: player.number,
     teamShort: team?.short ?? '',
+    teamLogo: team?.logo ?? '',
     bats: player.bats,
     throws: player.throws,
     stats,

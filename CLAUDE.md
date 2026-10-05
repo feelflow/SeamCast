@@ -37,7 +37,7 @@ Nachfolger des alten WinForms-Tools „Baseball-TV-Manager". Besitzer: Florian H
 - Kader-Datenbank (Teams, Spieler) mit Seite `/kader/`, Access-Import der alten Daten inkl. Statistik (wiederholbar).
 - Zweites Scoreboard-Design „tafel" (Vorlage des Nutzers aus dem alten Tool), Spielerkarten Batter/Pitcher (`/overlay/players.html`), Aufstellung (`/overlay/lineup.html`).
 - Bedienung im hellen Design, Windows-Start per `start-seamcast.bat`. Der Nutzer testet in OBS (läuft).
-- Profil „Layout HDH“ (`config/profiles/hdh.json`): senkrechte Pitcher-Karte nach seiner Loopic-Vorlage (`cards.pitcher.layout: "table"`, Einfahr-Animation, Sponsor-Logo). Bilder/Logos liegen in `config/assets/` und werden über `/assets/<Datei>` ausgeliefert (Profil: `logo`). Je Karte eigene `position` möglich.
+- Profil „Layout HDH“ (`config/profiles/hdh.json`): Pitcher-Karte (`layout: "table"`, senkrecht) und Batter-Karte (`layout: "wide"`, breit, mit Vereinslogo aus dem Kader und Schlagseite unter der Nummer) nach seinen Loopic-Vorlagen, mit Einfahr-Animation und Sponsor-Logo. Bilder/Logos liegen in `config/assets/` und werden über `/assets/<Datei>` ausgeliefert (Profil: `logo`). Je Karte eigene `position` möglich.
 
 ## Themen und Backlog (Details stehen im jeweiligen GitHub-Issue)
 Neue Aufgabe zu SeamCast: erst hier das passende Thema suchen, dann `gh api repos/feelflow/SeamCast/issues/<nr>` lesen. Nach Abschluss Issue schließen (im PR `Closes #<nr>`).
@@ -57,7 +57,7 @@ Neue Aufgabe zu SeamCast: erst hier das passende Thema suchen, dann `gh api repo
 | 20 | Design-Pakete (ZIP mit Layout, Logos, Schriften) | idea | Setzt #19 voraus; importierter Code muss abgesichert werden. |
 | 14 | Lizenz und Markenprüfung | idea | Name „SeamCast", Produkt soll vermarktbar sein. Lizenz und Markenrecherche offen. |
 
-| 22 | Anzeige der Spieler | in Arbeit | Pitcher-Karte (Layout HDH) fertig. **Batter folgt:** Nutzer schickt dafür eine Loopic-Vorlage (HTML-Export); daraus Layout nachbauen wie beim Pitcher (Maße/Animation aus dem Export lesen, eingebettete Bilder extrahieren). Win-Loss-Kennzahl heißt `wl`. |
+| 22 | Anzeige der Spieler | Pitcher+Batter fertig | Layout HDH für beide Karten. Offen: Loopic-Vorlage hat unter der Nummer eine Position (z. B. „3B“), im Kader gibt es dafür kein Feld – aktuell steht dort die Schlagseite (`tag: "bats"`). Position als Kader-Feld nur auf Wunsch. Vereinslogo: Datei in `config/assets/`, Dateiname beim Team im Kader eintragen. Neue Vorlagen immer so lesen: Loopic-HTML parsen, Maße/Zeiten/Bilder extrahieren, als Layout nachbauen. |
 
 Weitere Ideen (noch ohne Issue): Aufstellung automatisch mit aktuellem Schlagmann koppeln, Spielerfotos, Ergebnis-/Inning-Tabelle als Grafik, Tastaturkürzel erweitern, Bedienung am Handy (Layout für schmale Bildschirme, große Tasten; aus #6 ausgegliedert, nicht eilig; hängt mit #9 Zugriffsschutz zusammen).
 
