@@ -268,10 +268,10 @@ describe('Design-Wahl', () => {
     const untilP = control.until as unknown as (t: (s: PSnap) => boolean) => Promise<PSnap>;
     const first = await untilP((s) => Array.isArray(s.profiles));
     expect(first.profile).toBe('default');
-    expect(first.profiles.map((p) => p.id)).toContain('tafel');
+    expect(first.profiles.map((p) => p.id)).toContain('hdh');
 
-    control.send({ type: 'profile', id: 'tafel' });
-    await untilP((s) => s.profile === 'tafel');
+    control.send({ type: 'profile', id: 'hdh' });
+    await untilP((s) => s.profile === 'hdh');
 
     const errors: unknown[] = [];
     control.ws.on('message', (d) => {
@@ -287,7 +287,7 @@ describe('Design-Wahl', () => {
     server = await startServer({ port: 0, dataDir: dir, log: () => {} });
     const again = open(server.port, 'control');
     await again.ready;
-    expect((await (again.until as unknown as (t: (s: PSnap) => boolean) => Promise<PSnap>)((s) => Array.isArray(s.profiles))).profile).toBe('tafel');
+    expect((await (again.until as unknown as (t: (s: PSnap) => boolean) => Promise<PSnap>)((s) => Array.isArray(s.profiles))).profile).toBe('hdh');
   });
 });
 
@@ -308,8 +308,8 @@ describe('Layout je Grafik', () => {
     expect(afterBatter.layouts).toEqual({ scoreboard: null, batter: 'hdh', pitcher: null, lineup: null });
     expect(afterBatter.profile).toBe('default');
 
-    control.send({ type: 'layout', graphic: 'pitcher', id: 'tafel' });
-    await untilL((s) => s.layouts?.pitcher === 'tafel');
+    control.send({ type: 'layout', graphic: 'pitcher', id: 'hdh' });
+    await untilL((s) => s.layouts?.pitcher === 'hdh');
 
     const errors: unknown[] = [];
     control.ws.on('message', (d) => {
@@ -333,7 +333,7 @@ describe('Layout je Grafik', () => {
     const again = open(server.port, 'control');
     await again.ready;
     const restored = await (again.until as unknown as (t: (s: LSnap) => boolean) => Promise<LSnap>)((s) => typeof s.layouts === 'object');
-    expect(restored.layouts).toEqual({ scoreboard: null, batter: null, pitcher: 'tafel', lineup: null });
+    expect(restored.layouts).toEqual({ scoreboard: null, batter: null, pitcher: 'hdh', lineup: null });
   });
 
   it('nimmt Layout-Befehle nur von der Bedienung an', async () => {

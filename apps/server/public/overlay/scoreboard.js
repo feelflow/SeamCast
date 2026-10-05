@@ -31,7 +31,19 @@ function setLive(live) {
   body.dataset.live = live ? 'true' : 'false';
 }
 
-function applyProfile(p) {
+/** Abschnitt „scoreboard“ des Profils überschreibt nur das Scoreboard (Karten und Aufstellung bleiben unberührt). */
+function withScoreboardOverrides(p) {
+  const o = p.scoreboard;
+  if (!o || typeof o !== 'object') return p;
+  const merged = { ...p, ...o };
+  for (const key of ['colors', 'font', 'labels', 'show', 'layout']) {
+    if (o[key] && typeof o[key] === 'object') merged[key] = { ...(p[key] ?? {}), ...o[key] };
+  }
+  return merged;
+}
+
+function applyProfile(profileData) {
+  const p = withScoreboardOverrides(profileData);
   document.documentElement.removeAttribute('style');
   const root = document.documentElement.style;
   const c = p.colors ?? {};
