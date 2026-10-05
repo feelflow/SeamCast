@@ -565,7 +565,13 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
         const slots = parseSlots(input.slots);
         if ((side !== 'away' && side !== 'home') || !slots || slots.some((x) => !repo.getPlayer(x.playerId))) return reject(ws);
         changed = JSON.stringify(lineups[side]) !== JSON.stringify(slots);
+        // Anderer Pitcher in der Aufstellung = Pitcherwechsel: Würfe dieser Mannschaft starten bei 0.
+        const before = currentPitcherId(lineups[side]);
+        const after = currentPitcherId(slots);
         lineups = { ...lineups, [side]: slots };
+        if (before !== null && after !== null && before !== after && game.state.pitches[side] > 0) {
+          game.dispatch({ type: 'adjustPitches', side, delta: -game.state.pitches[side] });
+        }
         break;
       }
       case 'profile': {

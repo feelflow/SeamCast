@@ -91,6 +91,6 @@ label small:empty { display: none; }
 
 /* Spielerkarten: Schlagmann automatisch aus der Aufstellung */
 #batter-auto { margin-bottom: 10px; }
-#batter-auto .auto-title { font-size: 13px; color: var(--muted, #667); }
-#batter-auto .auto-who { font-size: 22px; font-weight: 700; margin: 2px 0; }
-#batter-auto .auto-sub { font-size: 13px; color: var(--muted, #667); margin-bottom: 8px; }
+.auto-title { font-size: 13px; color: var(--muted, #667); }
+.auto-who { font-size: 22px; font-weight: 700; margin: 2px 0; }
+.auto-sub { font-size: 13px; color: var(--muted, #667); margin-bottom: 8px; }
