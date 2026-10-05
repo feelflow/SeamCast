@@ -56,7 +56,7 @@ Neue Aufgabe zu SeamCast: erst hier das passende Thema suchen, dann `gh api repo
 | 20 | Design-Pakete (ZIP mit Layout, Logos, Schriften) | idea | Setzt #19 voraus; importierter Code muss abgesichert werden. |
 | 14 | Lizenz und Markenprüfung | idea | Name „SeamCast", Produkt soll vermarktbar sein. Lizenz und Markenrecherche offen. |
 
-Weitere Ideen (noch ohne Issue): Aufstellung automatisch mit aktuellem Schlagmann koppeln, Spielerfotos, Ergebnis-/Inning-Tabelle als Grafik, Tastaturkürzel erweitern.
+Weitere Ideen (noch ohne Issue): Aufstellung automatisch mit aktuellem Schlagmann koppeln, Spielerfotos, Ergebnis-/Inning-Tabelle als Grafik, Tastaturkürzel erweitern, Bedienung am Handy (Layout für schmale Bildschirme, große Tasten; aus #6 ausgegliedert, nicht eilig; hängt mit #9 Zugriffsschutz zusammen).
 
 ## Nutzer
 Florian Heinicke, Heidenheim Heideköpfe, Livestream-Grafiken. Laie: kurze deutsche Erklärungen, genaue Klickanleitungen (Windows, `start-seamcast.bat`), Ergebnisse lieber testen und zeigen als nur beschreiben. Er arbeitet oft am Handy und kann dann nichts ausprobieren – dann selbstständig weitermachen.
