@@ -291,6 +291,65 @@ describe('Design-Wahl', () => {
   });
 });
 
+describe('Layout je Grafik', () => {
+  type LSnap = Snap & { profile: string; layouts: Record<string, string | null> };
+
+  it('wählt Layouts je Grafik getrennt, merkt sie sich und lehnt Ungültiges ab', async () => {
+    const { port } = await start();
+    const control = open(port, 'control');
+    await control.ready;
+    const untilL = control.until as unknown as (t: (s: LSnap) => boolean) => Promise<LSnap>;
+    const first = await untilL((s) => typeof s.layouts === 'object');
+    expect(first.layouts).toEqual({ scoreboard: null, batter: null, pitcher: null, lineup: null });
+
+    control.send({ type: 'layout', graphic: 'batter', id: 'hdh' });
+    const afterBatter = await untilL((s) => s.layouts?.batter === 'hdh');
+    // Nur diese Grafik ändert sich, das Grundprofil bleibt
+    expect(afterBatter.layouts).toEqual({ scoreboard: null, batter: 'hdh', pitcher: null, lineup: null });
+    expect(afterBatter.profile).toBe('default');
+
+    control.send({ type: 'layout', graphic: 'pitcher', id: 'tafel' });
+    await untilL((s) => s.layouts?.pitcher === 'tafel');
+
+    const errors: unknown[] = [];
+    control.ws.on('message', (d) => {
+      const m = JSON.parse(d.toString()) as { type: string };
+      if (m.type === 'error') errors.push(m);
+    });
+    control.send({ type: 'layout', graphic: 'batter', id: '../geheim' });
+    control.send({ type: 'layout', graphic: 'batter', id: 'gibt-es-nicht' });
+    control.send({ type: 'layout', graphic: 'unbekannt', id: 'hdh' });
+    control.send({ type: 'layout', graphic: 'batter', id: 5 });
+    control.send({ type: 'layout', id: 'hdh' });
+    await new Promise((r) => setTimeout(r, 100));
+    expect(errors).toHaveLength(5);
+
+    // Zurück auf „wie Grundprofil“
+    control.send({ type: 'layout', graphic: 'batter', id: null });
+    await untilL((s) => s.layouts?.batter === null);
+
+    await server?.close();
+    server = await startServer({ port: 0, dataDir: dir, log: () => {} });
+    const again = open(server.port, 'control');
+    await again.ready;
+    const restored = await (again.until as unknown as (t: (s: LSnap) => boolean) => Promise<LSnap>)((s) => typeof s.layouts === 'object');
+    expect(restored.layouts).toEqual({ scoreboard: null, batter: null, pitcher: 'tafel', lineup: null });
+  });
+
+  it('nimmt Layout-Befehle nur von der Bedienung an', async () => {
+    const { port } = await start();
+    const overlay = open(port, 'overlay');
+    const control = open(port, 'control');
+    await overlay.ready;
+    await control.ready;
+    overlay.send({ type: 'layout', graphic: 'batter', id: 'hdh' });
+    await new Promise((r) => setTimeout(r, 100));
+    control.send({ type: 'undo' });
+    const snap = (await control.until((s) => s.type === 'snapshot')) as LSnap;
+    expect(snap.layouts.batter).toBeNull();
+  });
+});
+
 describe('Logo-Dateien', () => {
   it('liefert Bilder aus config/assets und lehnt alles andere ab', async () => {
     const { port } = await start();

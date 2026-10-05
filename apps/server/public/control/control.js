@@ -46,31 +46,6 @@ function render(msg) {
   renderPickers();
   renderCardToggles();
   renderLineup();
-  const design = $('design');
-  const designSig = JSON.stringify(msg.profiles);
-  if (design.dataset.sig !== designSig) {
-    design.dataset.sig = designSig;
-    design.replaceChildren(...msg.profiles.map((p) => new Option(p.name, p.id)));
-  }
-  design.value = msg.profile;
-  const select = $('rules');
-  if (select.options.length === 0) {
-    for (const rules of Object.values(msg.rules)) {
-      const option = document.createElement('option');
-      option.value = rules.id;
-      option.textContent = `${rules.sport === 'softball' ? 'Softball' : 'Baseball'} · ${rules.innings} Innings`;
-      select.append(option);
-    }
-  }
-  select.value = g.rules.id;
-
-  for (const side of ['away', 'home']) {
-    const form = $(`team-${side}`);
-    if (!form.contains(document.activeElement)) {
-      form.elements.name.value = g.teams[side].name;
-      form.elements.short.value = g.teams[side].short;
-    }
-  }
 }
 
 function connect() {
@@ -243,16 +218,6 @@ $('new-pitcher').addEventListener('click', () => {
 $('new-game').addEventListener('click', () => {
   if (confirm('Neues Spiel starten? Spielstand, Inning, Count, Bases und Pitchcount werden zurückgesetzt (Teams und Regeln bleiben). Mit „Rückgängig“ lässt es sich zurückholen.')) act({ type: 'newGame' });
 });
-$('rules').addEventListener('change', (event) => act({ type: 'setRules', rulesId: event.target.value }));
-
-for (const side of ['away', 'home']) {
-  $(`team-${side}`).addEventListener('submit', (event) => {
-    event.preventDefault();
-    const form = event.target;
-    act({ type: 'setTeam', side, name: form.elements.name.value, short: form.elements.short.value });
-  });
-}
-
 document.addEventListener('keydown', (event) => {
   if (event.target.closest('input, select, textarea') || event.altKey || event.metaKey) return;
   const key = event.key.toLowerCase();
@@ -279,11 +244,9 @@ document.addEventListener('keydown', (event) => {
   event.preventDefault();
 });
 
-$('overlay-url').textContent = `${location.origin}/overlay/scoreboard.html`;
-$('overlay-url-players').textContent = `${location.origin}/overlay/players.html`;
 connect();
 
-// --- Mannschaften aus dem Kader übernehmen ------------------------------------
+// --- Kader laden (für Spielerauswahl und Aufstellung) --------------------------
 let rosterTeams = [];
 let rosterPlayers = [];
 async function loadRoster() {
@@ -296,20 +259,8 @@ async function loadRoster() {
   } catch {
     return;
   }
-  for (const side of ['away', 'home']) {
-    const select = $(`pick-${side}`);
-    select.replaceChildren(new Option('– wählen –', ''));
-    for (const team of rosterTeams) select.append(new Option(`${team.name} (${team.short})`, String(team.id)));
-  }
   pickerSignature = '';
   renderPickers();
-}
-for (const side of ['away', 'home']) {
-  $(`pick-${side}`).addEventListener('change', (event) => {
-    const team = rosterTeams.find((t) => String(t.id) === event.target.value);
-    if (team) act({ type: 'setTeam', side, name: team.name, short: team.short });
-    event.target.value = '';
-  });
 }
 loadRoster();
 window.addEventListener('focus', loadRoster);
@@ -455,4 +406,3 @@ for (const side of ['away', 'home']) {
   });
 }
 
-$('design').addEventListener('change', (event) => send({ type: 'profile', id: event.target.value }));

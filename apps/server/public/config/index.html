@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <title>SeamCast – Einstellungen</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="../control/control.css">
+  <link rel="stylesheet" href="config.css">
+</head>
+<body>
+  <header>
+    <h1>SeamCast – Einstellungen</h1>
+    <span class="chip" id="chip-conn" data-ok="false">Getrennt</span>
+    <span class="chip" id="chip-error" hidden></span>
+    <span class="spacer"></span>
+    <a class="btn" href="/kader/">Kader</a>
+    <a class="btn" href="/control/">← Zur Bedienung</a>
+  </header>
+
+  <main id="config">
+    <h2 class="group-title">Layouts der Grafiken</h2>
+    <p class="hint">Jede Grafik hat ihr eigenes Layout. „Wie Grundprofil“ heißt: Sie übernimmt das Layout, das unten als Grundprofil gewählt ist. Die Vorschau zeigt sofort das Ergebnis.</p>
+    <div class="group graphics">
+      <section class="panel" data-graphic="scoreboard">
+        <h2>Scoreboard</h2>
+        <label>Layout <select data-layout="scoreboard"></select></label>
+        <div class="pv"><iframe class="preview" title="Vorschau Scoreboard" width="1920" height="1080" src="/overlay/scoreboard.html?role=preview"></iframe></div>
+      </section>
+      <section class="panel" data-graphic="batter">
+        <h2>Schlagmann (Batter)</h2>
+        <label>Layout <select data-layout="batter"></select></label>
+        <div class="pv"><iframe class="preview" title="Vorschau Batter" width="1920" height="1080" src="/overlay/players.html?role=preview&amp;only=batter"></iframe></div>
+      </section>
+      <section class="panel" data-graphic="pitcher">
+        <h2>Pitcher</h2>
+        <label>Layout <select data-layout="pitcher"></select></label>
+        <div class="pv"><iframe class="preview" title="Vorschau Pitcher" width="1920" height="1080" src="/overlay/players.html?role=preview&amp;only=pitcher"></iframe></div>
+      </section>
+      <section class="panel" data-graphic="lineup">
+        <h2>Aufstellung</h2>
+        <label>Layout <select data-layout="lineup"></select></label>
+        <div class="pv"><iframe class="preview" title="Vorschau Aufstellung" width="1920" height="1080" src="/overlay/lineup.html?role=preview"></iframe></div>
+      </section>
+    </div>
+
+    <h2 class="group-title">Grundprofil</h2>
+    <div class="group">
+      <section class="panel">
+        <h2>Standard für alle Grafiken</h2>
+        <label>Grundprofil <select id="design"></select></label>
+        <p class="hint">Gilt für jede Grafik, bei der oben „Wie Grundprofil“ steht.</p>
+      </section>
+    </div>
+
+    <h2 class="group-title">Spiel</h2>
+    <div class="group">
+      <section class="panel">
+        <h2>Regeln</h2>
+        <label>Regelwerk <select id="rules"></select></label>
+      </section>
+      <section class="panel">
+        <h2>Mannschaften</h2>
+        <label>Gast aus Kader <select id="pick-away"><option value="">– wählen –</option></select></label>
+        <label>Heim aus Kader <select id="pick-home"><option value="">– wählen –</option></select></label>
+        <form id="team-away" class="team">
+          <label>Gast <input name="name" maxlength="40" placeholder="Name"></label>
+          <input name="short" maxlength="6" placeholder="Kürzel" aria-label="Kürzel Gast">
+          <button type="submit">Setzen</button>
+        </form>
+        <form id="team-home" class="team">
+          <label>Heim <input name="name" maxlength="40" placeholder="Name"></label>
+          <input name="short" maxlength="6" placeholder="Kürzel" aria-label="Kürzel Heim">
+          <button type="submit">Setzen</button>
+        </form>
+      </section>
+    </div>
+
+    <h2 class="group-title">Adressen für OBS / vMix</h2>
+    <div class="group">
+      <section class="panel wide">
+        <p class="hint">Scoreboard: <code id="url-scoreboard"></code></p>
+        <p class="hint">Spielerkarten (Batter und Pitcher): <code id="url-players"></code></p>
+        <p class="hint">Aufstellung (Gast und Heim): <code id="url-lineup"></code></p>
+        <p class="hint">Mit <code>?profile=&lt;Name&gt;</code> hinter der Adresse bleibt die Grafik fest bei einem Layout, egal was hier gewählt ist.</p>
+      </section>
+    </div>
+  </main>
+  <script src="config.js"></script>
+</body>
+</html>

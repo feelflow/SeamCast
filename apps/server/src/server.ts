@@ -96,6 +96,26 @@ async function listProfiles(dir: string): Promise<Array<{ id: string; name: stri
   return result.length ? result : [{ id: 'default', name: 'Standard' }];
 }
 
+/** Grafiken, für die ein eigenes Layout (Profil) gewählt werden kann. Die Aufstellung (Gast/Heim) teilt sich eines. */
+const LAYOUT_TARGETS = ['scoreboard', 'batter', 'pitcher', 'lineup'] as const;
+type LayoutTarget = (typeof LAYOUT_TARGETS)[number];
+/** Profilkennung je Grafik; null = folgt dem Grundprofil. */
+type Layouts = Record<LayoutTarget, string | null>;
+
+const emptyLayouts = (): Layouts => ({ scoreboard: null, batter: null, pitcher: null, lineup: null });
+
+function readLayouts(saved: unknown, known: Array<{ id: string }>): Layouts {
+  const result = emptyLayouts();
+  const raw = (saved as { layouts?: Record<string, unknown> } | null)?.layouts;
+  if (raw && typeof raw === 'object') {
+    for (const target of LAYOUT_TARGETS) {
+      const id = raw[target];
+      if (typeof id === 'string' && known.some((x) => x.id === id)) result[target] = id;
+    }
+  }
+  return result;
+}
+
 function readGraphics(saved: unknown): Graphics {
   const result: Graphics = { scoreboard: true, batter: false, pitcher: false, lineupAway: false, lineupHome: false };
   const raw = (saved as { graphics?: Record<string, unknown> } | null)?.graphics;
@@ -120,11 +140,12 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
   let matchup: Matchup = emptyMatchup();
   let lineups: Lineups = emptyLineups();
   let profileId = 'default';
+  let layouts: Layouts = emptyLayouts();
   const profileList = await listProfiles(profilesDir);
 
   const persistence = createPersistence(
     path.join(dataDir, 'game.json'),
-    () => ({ ...game.snapshot(), graphics, matchup, lineups, profile: profileId }),
+    () => ({ ...game.snapshot(), graphics, matchup, lineups, profile: profileId, layouts }),
     log,
   );
 
@@ -138,6 +159,7 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
       lineups = readLineups(saved);
       const savedProfile = (saved as { profile?: unknown }).profile;
       if (typeof savedProfile === 'string' && profileList.some((x) => x.id === savedProfile)) profileId = savedProfile;
+      layouts = readLayouts(saved, profileList);
       log('Spielstand aus der letzten Sitzung wiederhergestellt.');
     } else {
       log('Gespeicherter Spielstand ist ungültig und wird ignoriert.');
@@ -165,6 +187,7 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
         pitcher: buildCard(repo, 'pitcher', matchup.pitcher[fieldingSide(game.state)], lineups),
       },
       profile: profileId,
+      layouts,
       profiles: profileList,
       lineups: { away: buildLineup(repo, lineups.away), home: buildLineup(repo, lineups.home) },
       status: { overlays: count('overlay'), controls: count('control') },
@@ -519,6 +542,15 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
         if (typeof input.id !== 'string' || !profileList.some((x) => x.id === input.id)) return reject(ws);
         changed = profileId !== input.id;
         profileId = input.id;
+        break;
+      }
+      case 'layout': {
+        const target = input.graphic;
+        const id = input.id;
+        if (typeof target !== 'string' || !(LAYOUT_TARGETS as readonly string[]).includes(target)) return reject(ws);
+        if (id !== null && (typeof id !== 'string' || !profileList.some((x) => x.id === id))) return reject(ws);
+        changed = layouts[target as LayoutTarget] !== id;
+        layouts = { ...layouts, [target]: id };
         break;
       }
       case 'hideAll':

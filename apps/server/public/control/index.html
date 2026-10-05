@@ -15,6 +15,7 @@
     <span class="chip" id="chip-error" hidden></span>
     <span class="spacer"></span>
     <a class="btn" href="/kader/">Kader</a>
+    <a class="btn" href="/config/">Einstellungen</a>
     <button id="new-game" class="ghost" title="Spielstand zurücksetzen">⟲ Neues Spiel</button>
     <button id="undo" class="ghost" title="Rückgängig (U / Strg+Z)">↶ Rückgängig</button>
     <button id="toggle-scoreboard" class="primary" title="Scoreboard an/aus (G)">Scoreboard</button>
@@ -133,32 +134,6 @@
           <p class="hint">Reihenfolge = Schlagreihenfolge. Erst „Speichern“, dann einblenden.</p>
         </section>
       </div>
-
-      <details class="setup" open>
-        <summary class="group-title">Einrichtung</summary>
-        <div class="group">
-          <section class="panel">
-            <h2>Spiel</h2>
-            <label>Design <select id="design"></select></label>
-            <label>Regeln <select id="rules"></select></label>
-          </section>
-          <section class="panel">
-            <h2>Mannschaften</h2>
-            <label>Gast aus Kader <select id="pick-away"><option value="">– wählen –</option></select></label>
-            <label>Heim aus Kader <select id="pick-home"><option value="">– wählen –</option></select></label>
-            <form id="team-away" class="team">
-              <label>Gast <input name="name" maxlength="40" placeholder="Name"></label>
-              <input name="short" maxlength="6" placeholder="Kürzel" aria-label="Kürzel Gast">
-              <button type="submit">Setzen</button>
-            </form>
-            <form id="team-home" class="team">
-              <label>Heim <input name="name" maxlength="40" placeholder="Name"></label>
-              <input name="short" maxlength="6" placeholder="Kürzel" aria-label="Kürzel Heim">
-              <button type="submit">Setzen</button>
-            </form>
-          </section>
-        </div>
-      </details>
     </main>
 
     <aside id="col-side">
@@ -169,8 +144,6 @@
           <iframe class="preview" title="Vorschau Spielerkarten" width="1920" height="1080" src="/overlay/players.html?role=preview"></iframe>
           <iframe class="preview" title="Vorschau Aufstellung" width="1920" height="1080" src="/overlay/lineup.html?role=preview"></iframe>
         </div>
-        <p class="hint">Overlay-Adresse Scoreboard (OBS / vMix / CasparCG): <code id="overlay-url"></code></p>
-        <p class="hint">Overlay-Adresse Spielerkarten (Batter / Pitcher): <code id="overlay-url-players"></code></p>
       </section>
 
       <section class="panel keys">
