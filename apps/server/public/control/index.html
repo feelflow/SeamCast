@@ -39,7 +39,7 @@
               <button data-action='{"type":"strike"}'><kbd>S</kbd> Strike</button>
               <button data-action='{"type":"foul"}'><kbd>F</kbd> Foul</button>
               <button id="out-btn" title="Schlagmann aus; bei Läufern auf Base fragt SeamCast, wohin sie kommen"><kbd>O</kbd> Out</button>
-              <button data-action='{"type":"hitByPitch"}' title="Schlagmann getroffen (Hit by Pitch)">Getroffen</button>
+              <button data-action='{"type":"hitByPitch"}' title="Schlagmann vom Ball getroffen">Hit by Pitch</button>
               <button data-action='{"type":"newBatter"}' title="Nächster Schlagmann (N)"><kbd>N</kbd> Neuer Batter</button>
               <button data-action='{"type":"intentionalWalk"}' title="Absichtlicher Walk, kein Pitch gezählt">Int. Walk</button>
               <button data-action='{"type":"balk"}' title="Alle Läufer eine Base weiter">Balk</button>
@@ -97,7 +97,7 @@
                 <button id="pitch-plus" aria-label="Pitches plus">+</button></div>
             </div>
             <div class="grid c2">
-              <button data-action='{"type":"nextHalf"}'>Nächster Halbinning</button>
+              <button data-action='{"type":"nextHalf"}'>Nächstes Halbinning</button>
               <button id="new-pitcher">Neuer Pitcher</button>
             </div>
           </section>
@@ -113,7 +113,7 @@
           <div id="batter-auto" hidden>
             <div class="auto-row">
               <div class="auto-text">
-                <div class="auto-title">Am Schlag <small id="team-batter-auto"></small></div>
+                <div class="auto-title">At Bat <small id="team-batter-auto"></small></div>
                 <div class="auto-who" id="auto-batter-name"></div>
                 <div class="auto-sub" id="auto-batter-pos"></div>
               </div>
@@ -131,20 +131,20 @@
           <label id="lbl-pitcher"><small id="team-pitcher"></small>
             <select id="sel-pitcher"></select></label>
           <div id="pitcher-auto" hidden>
-            <div class="auto-title">Auf dem Hügel <small id="team-pitcher-auto"></small></div>
+            <div class="auto-title">On Mound <small id="team-pitcher-auto"></small></div>
             <div class="auto-who" id="auto-pitcher-name"></div>
           </div>
           <button class="toggle" id="toggle-pitcher" data-on="false">Einblenden</button>
           <details class="info">
             <summary>Hinweise</summary>
             <p class="hint" id="cards-hint" hidden>Noch keine Spieler im Kader. Unter „Kader“ anlegen oder importieren.</p>
-            <p class="hint" id="auto-hint" hidden>Automatisch nach der Aufstellung: Nach Out, Treffer, Walk oder Strikeout kommt der nächste Schlagmann. Pitcherwechsel über die Aufstellung (Pitchzähler startet dann bei 0).</p>
+            <p class="hint" id="auto-hint" hidden>Automatisch nach dem Line Up: Nach Out, Treffer, Walk oder Strikeout kommt der nächste Schlagmann. Pitcherwechsel über das Line Up (Pitchzähler startet dann bei 0).</p>
             <p class="hint">Bei Homerun, Grand Slam und Strikeout blendet SeamCast automatisch die Animation ein (Overlay <code>events.html</code>). Testen auf der Seite „Einstellungen“.</p>
           </details>
         </section>
 
         <section class="panel">
-          <h2>Aufstellung</h2>
+          <h2>Line Up</h2>
           <div class="grid c2">
             <button class="toggle" id="lu-toggle-away" data-on="false">Gast</button>
             <button class="toggle" id="lu-toggle-home" data-on="false">Heim</button>
@@ -155,7 +155,7 @@
       </div>
 
       <details class="editor">
-        <summary class="group-title">Aufstellung bearbeiten</summary>
+        <summary class="group-title">Line Up bearbeiten</summary>
         <section class="panel wide" id="lineup-panel">
           <div class="lineup-sides">
             <div class="lineup-side" data-side="away">
@@ -180,7 +180,7 @@
         <div id="preview-box">
           <iframe class="preview" title="Vorschau Scoreboard" width="1920" height="1080" src="/overlay/scoreboard.html?role=preview"></iframe>
           <iframe class="preview" title="Vorschau Spielerkarten" width="1920" height="1080" src="/overlay/players.html?role=preview"></iframe>
-          <iframe class="preview" title="Vorschau Aufstellung" width="1920" height="1080" src="/overlay/lineup.html?role=preview"></iframe>
+          <iframe class="preview" title="Vorschau Line Up" width="1920" height="1080" src="/overlay/lineup.html?role=preview"></iframe>
         </div>
       </section>
 
