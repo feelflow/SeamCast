@@ -1,0 +1,89 @@
+{
+  "name": "Anzeigetafel",
+  "colors": {
+    "panel": "#0b0b0b",
+    "panelText": "#ffffff",
+    "accent": "#f2b01e",
+    "muted": "#8fa3bf",
+    "scoreBg": "#ffffff",
+    "scoreText": "#111111",
+    "baseOn": "#f2b01e",
+    "baseOff": "#ffffff",
+    "frame": "#d8d8d8",
+    "glossTop": "#3c3c3c",
+    "field": "#2f6a2a"
+  },
+  "font": {
+    "family": "'Segoe UI', 'Helvetica Neue', Arial, sans-serif",
+    "scale": 1
+  },
+  "radius": 6,
+  "labels": {
+    "top": "TOP",
+    "bottom": "BOT",
+    "out": "OUT",
+    "pitch": "P"
+  },
+  "show": {
+    "pitchCount": true,
+    "bases": true,
+    "count": true,
+    "outs": true
+  },
+  "layout": {
+    "position": "top-left",
+    "margin": 40
+  },
+  "cards": {
+    "position": "bottom-left",
+    "margin": 40,
+    "batter": {
+      "label": "AM SCHLAG",
+      "stats": [
+        [
+          "avg",
+          "AVG"
+        ],
+        [
+          "obp",
+          "OBP"
+        ],
+        [
+          "ops",
+          "OPS"
+        ],
+        [
+          "hr",
+          "HR"
+        ],
+        [
+          "rbi",
+          "RBI"
+        ]
+      ]
+    },
+    "pitcher": {
+      "label": "PITCHER",
+      "pitchCount": true,
+      "stats": [
+        [
+          "era",
+          "ERA"
+        ],
+        [
+          "whip",
+          "WHIP"
+        ],
+        [
+          "ip",
+          "IP"
+        ],
+        [
+          "so",
+          "SO"
+        ]
+      ]
+    }
+  },
+  "design": "tafel"
+}

@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="overlay.css">
+  <link rel="stylesheet" href="tafel.css">
 </head>
 <body data-live="false" data-graphic="on" data-position="top-left">
   <div id="scoreboard">
@@ -27,6 +28,25 @@
       </div>
       <div class="pitches" id="pitches"><span id="pitch-label">P</span><b id="pitch-count">0</b></div>
     </div>
+  </div>
+  <div id="tafel" aria-hidden="true">
+    <div class="t-cell t-name" id="t-name-away"></div>
+    <div class="t-cell t-score" id="t-score-away">0</div>
+    <div class="t-cell t-field">
+      <svg viewBox="0 0 60 60">
+        <polygon class="t-grass" points="30,6 54,30 30,54 6,30"/>
+        <circle class="t-mound" cx="30" cy="31" r="4"/>
+        <rect class="t-base" id="t-base-2" x="24.5" y="0.5" width="11" height="11"/>
+        <rect class="t-base" id="t-base-3" x="0.5" y="24.5" width="11" height="11"/>
+        <rect class="t-base" id="t-base-1" x="48.5" y="24.5" width="11" height="11"/>
+      </svg>
+    </div>
+    <div class="t-cell t-inning" id="t-inning"></div>
+    <div class="t-cell t-pitch" id="t-pitch"></div>
+    <div class="t-cell t-name" id="t-name-home"></div>
+    <div class="t-cell t-score" id="t-score-home">0</div>
+    <div class="t-cell t-count" id="t-count"></div>
+    <div class="t-cell t-out" id="t-out"></div>
   </div>
   <script src="scoreboard.js"></script>
 </body>
