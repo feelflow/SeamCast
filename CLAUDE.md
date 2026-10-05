@@ -43,7 +43,7 @@ Neue Aufgabe zu SeamCast: erst hier das passende Thema suchen, dann `gh api repo
 
 | # | Thema | Status | Wichtig zu wissen |
 |---|-------|--------|-------------------|
-| 6 | Bedienoberfläche aufräumen | next | Nutzer will das „später". Panels gruppieren, Vorschau auch für Aufstellung, handytauglich (er bedient oft vom Handy). Scoreboard-Ziffern verrutschen bei Innings ≥ 10 (bewusst vertagt). |
+| 6 | Bedienoberfläche aufräumen | PC-Teil fertig | Vorerst primär für die Bedienung am PC ausgelegt: Gruppen „Im Spiel / Grafiken / Einrichtung“, Vorschau (Scoreboard, Karten, Aufstellung) und Tastenkürzel rechts, Vorschau bleibt beim Scrollen sichtbar. Handy-Bedienung bewusst später (unter 1100 px nur Notlayout). Scoreboard-Ziffern verrutschen bei Innings ≥ 10 (bewusst vertagt). |
 | 7 | Logos und Videos in den Grafiken | next | Logos kommen aus dem Kader (`logo` = reiner Dateiname). Videos (z. B. Opener) sollen in OBS/vMix laufen, CasparCG nicht mehr nötig. `LOGO_Opener` aus der Access-Datei noch nicht importiert. |
 | 8 | Steuerung von OBS und vMix | idea | Szenen/Quellen schalten, Overlays automatisch ein- und ausblenden. Ziel: kein CasparCG. |
 | 9 | Anmeldung und Zugriffsschutz | idea | Bisher nur Same-Origin-Check, Standard-Host 127.0.0.1. Nötig, sobald Betrieb im Netz/Handy-Bedienung. |
@@ -56,7 +56,7 @@ Neue Aufgabe zu SeamCast: erst hier das passende Thema suchen, dann `gh api repo
 | 20 | Design-Pakete (ZIP mit Layout, Logos, Schriften) | idea | Setzt #19 voraus; importierter Code muss abgesichert werden. |
 | 14 | Lizenz und Markenprüfung | idea | Name „SeamCast", Produkt soll vermarktbar sein. Lizenz und Markenrecherche offen. |
 
-Weitere Ideen (noch ohne Issue): Aufstellung automatisch mit aktuellem Schlagmann koppeln, Spielerfotos, Ergebnis-/Inning-Tabelle als Grafik, Tastaturkürzel erweitern.
+Weitere Ideen (noch ohne Issue): Aufstellung automatisch mit aktuellem Schlagmann koppeln, Spielerfotos, Ergebnis-/Inning-Tabelle als Grafik, Tastaturkürzel erweitern, Bedienung am Handy (Layout für schmale Bildschirme, große Tasten; aus #6 ausgegliedert, nicht eilig; hängt mit #9 Zugriffsschutz zusammen).
 
 ## Nutzer
 Florian Heinicke, Heidenheim Heideköpfe, Livestream-Grafiken. Laie: kurze deutsche Erklärungen, genaue Klickanleitungen (Windows, `start-seamcast.bat`), Ergebnisse lieber testen und zeigen als nur beschreiben. Er arbeitet oft am Handy und kann dann nichts ausprobieren – dann selbstständig weitermachen.

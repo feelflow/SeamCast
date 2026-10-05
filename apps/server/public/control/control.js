@@ -226,8 +226,7 @@ $('pitch-plus').addEventListener('click', () => last && act({ type: 'adjustPitch
 function fitPreview() {
   const box = $('preview-box');
   const scale = box.clientWidth / 1920;
-  $('preview').style.transform = `scale(${scale})`;
-  $('preview2').style.transform = `scale(${scale})`;
+  document.querySelectorAll('.preview').forEach((frame) => (frame.style.transform = `scale(${scale})`));
   box.style.height = `${1080 * scale}px`;
 }
 window.addEventListener('resize', fitPreview);
@@ -266,6 +265,9 @@ document.addEventListener('keydown', (event) => {
   else if (key === 'f') act({ type: 'foul' });
   else if (key === 'o') act({ type: 'out' });
   else if (key === 'n') act({ type: 'newBatter' });
+  else if (key === 'g') {
+    if (last) send({ type: 'graphics', id: 'scoreboard', visible: !last.graphics.scoreboard });
+  }
   else if (key === 'h') startHit(1);
   else if (['1', '2', '3', '4'].includes(key)) startHit(Number(key));
   else if (key === 'enter' && pending) confirmHit();
