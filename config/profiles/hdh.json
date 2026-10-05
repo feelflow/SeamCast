@@ -20,8 +20,18 @@
     "scale": 1
   },
   "radius": 10,
-  "labels": { "top": "▲", "bottom": "▼", "out": "OUT", "pitch": "P" },
-  "show": { "pitchCount": true, "bases": true, "count": true, "outs": true },
+  "labels": {
+    "top": "▲",
+    "bottom": "▼",
+    "out": "OUT",
+    "pitch": "P"
+  },
+  "show": {
+    "pitchCount": true,
+    "bases": true,
+    "count": true,
+    "outs": true
+  },
   "layout": {
     "position": "top-left",
     "margin": 40
@@ -38,7 +48,24 @@
       "teamLogo": true,
       "tag": "pos",
       "logo": "voith.jpg",
-      "stats": [["avg", "AVG"], ["hr", "HR"], ["rbi", "RBI"], ["obp", "OBP"]]
+      "stats": [
+        [
+          "avg",
+          "AVG"
+        ],
+        [
+          "hr",
+          "HR"
+        ],
+        [
+          "rbi",
+          "RBI"
+        ],
+        [
+          "obp",
+          "OBP"
+        ]
+      ]
     },
     "pitcher": {
       "label": "PITCHER",
@@ -46,7 +73,61 @@
       "position": "bottom-left",
       "logo": "voith.jpg",
       "pitchCount": false,
-      "stats": [["era", "ERA"], ["ip", "INNINGS"], ["so", "STRIKEOUTS"], ["wl", "WIN-LOSS"], ["whip", "WHIP"]]
+      "stats": [
+        [
+          "era",
+          "ERA"
+        ],
+        [
+          "ip",
+          "INNINGS"
+        ],
+        [
+          "so",
+          "STRIKEOUTS"
+        ],
+        [
+          "wl",
+          "WIN-LOSS"
+        ],
+        [
+          "whip",
+          "WHIP"
+        ]
+      ]
+    }
+  },
+  "scoreboard": {
+    "design": "tafel",
+    "colors": {
+      "panel": "#0b0b0b",
+      "panelText": "#ffffff",
+      "accent": "#f2b01e",
+      "muted": "#8fa3bf",
+      "scoreBg": "#ffffff",
+      "scoreText": "#111111",
+      "baseOn": "#f2b01e",
+      "baseOff": "#ffffff",
+      "frame": "#d8d8d8",
+      "glossTop": "#3c3c3c",
+      "field": "#2f6a2a"
+    },
+    "radius": 6,
+    "labels": {
+      "top": "TOP",
+      "bottom": "BOT",
+      "out": "OUT",
+      "pitch": "P"
+    },
+    "show": {
+      "pitchCount": true,
+      "bases": true,
+      "count": true,
+      "outs": true
+    },
+    "layout": {
+      "position": "top-left",
+      "margin": 40
     }
   }
 }
