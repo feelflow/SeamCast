@@ -14,8 +14,9 @@ const SIMPLE_ACTIONS = [
   'ball',
   'strike',
   'foul',
-  'out',
   'hitByPitch',
+  'intentionalWalk',
+  'balk',
   'newBatter',
   'nextHalf',
   'newPitcher',
@@ -36,7 +37,21 @@ export function parseAction(input: unknown): Action | null {
 
   if (isSimpleAction(type)) return { type };
 
+  const parseRunners = (value: unknown): [number, number, number] | null =>
+    Array.isArray(value) && value.length === 3 && value.every((n) => isInt(n, -1, 4))
+      ? [value[0] as number, value[1] as number, value[2] as number]
+      : null;
+
   switch (type) {
+    case 'out': {
+      if (input.runners === undefined) return { type };
+      const runners = parseRunners(input.runners);
+      return runners ? { type, runners } : null;
+    }
+    case 'advance': {
+      const runners = parseRunners(input.runners);
+      return runners ? { type, runners } : null;
+    }
     case 'hit': {
       const bases = input.bases;
       if (bases !== 1 && bases !== 2 && bases !== 3 && bases !== 4) return null;

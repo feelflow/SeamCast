@@ -80,7 +80,7 @@ function connect() {
 // zwei Spieler stehen nie auf derselben Base. Nur erlaubte Ziele werden angeboten.
 const HIT_NAMES = { 1: 'Single', 2: 'Double', 3: 'Triple', 4: 'Homerun' };
 const BASE_NAMES = ['1B', '2B', '3B'];
-let pending = null; // { sig, bases, runners: [{ from, end }] }  from: 1..3, end: from..4 (4 = Run)
+let pending = null; // { kind, sig, bases, runners: [{ from, end }] }  from: 1..3, end: from..4 (4 = Run); kind: hit | out | advance (bases = 0: kein Schlagmann auf Base)
 
 function targetLabel(from, end) {
   if (end === 0) return 'Out';
@@ -104,6 +104,20 @@ function options(k) {
   return result;
 }
 
+function startPlay(kind) {
+  if (!last) return;
+  const occupied = last.game.bases;
+  if (!occupied.some(Boolean)) {
+    cancelHit();
+    if (kind === 'out') act({ type: 'out' });
+    return;
+  }
+  const runners = [];
+  occupied.forEach((on, i) => on && runners.push({ from: i + 1, end: i + 1 }));
+  pending = { kind, sig: JSON.stringify(occupied), bases: 0, runners };
+  renderRunners();
+}
+
 function startHit(bases) {
   if (!last) return;
   const occupied = last.game.bases;
@@ -115,7 +129,7 @@ function startHit(bases) {
   // Standard: Alle rücken so weit vor wie der Schlagmann.
   const runners = [];
   occupied.forEach((on, i) => on && runners.push({ from: i + 1, end: Math.min(i + 1 + bases, 4) }));
-  pending = { sig: JSON.stringify(occupied), bases, runners };
+  pending = { kind: 'hit', sig: JSON.stringify(occupied), bases, runners };
   renderRunners();
 }
 
@@ -138,7 +152,8 @@ function choose(k, end) {
 }
 
 function renderRunners() {
-  $('runners-title').textContent = `${HIT_NAMES[pending.bases]}: Wohin kommen die Läufer?`;
+  const titles = { out: 'Out: Wohin kommen die Läufer?', advance: 'Läufer rücken vor: Wohin?' };
+  $('runners-title').textContent = pending.kind === 'hit' ? `${HIT_NAMES[pending.bases]}: Wohin kommen die Läufer?` : titles[pending.kind];
   const rows = $('runners-rows');
   rows.replaceChildren();
   pending.runners.forEach((runner, k) => {
@@ -166,13 +181,16 @@ function confirmHit() {
   if (!pending) return;
   const advance = [0, 0, 0];
   for (const r of pending.runners) advance[r.from - 1] = r.end === 0 ? -1 : r.end - r.from;
-  act({ type: 'hit', bases: pending.bases, runners: advance });
+  if (pending.kind === 'hit') act({ type: 'hit', bases: pending.bases, runners: advance });
+  else act({ type: pending.kind, runners: advance });
   cancelHit();
 }
 
 document.querySelectorAll('button[data-hit]').forEach((button) =>
   button.addEventListener('click', () => startHit(Number(button.dataset.hit))),
 );
+$('out-runners').addEventListener('click', () => startPlay('out'));
+$('advance-runners').addEventListener('click', () => startPlay('advance'));
 $('runners-ok').addEventListener('click', confirmHit);
 $('runners-cancel').addEventListener('click', cancelHit);
 
