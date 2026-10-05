@@ -3,7 +3,7 @@ import { readFile, readdir, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { WebSocketServer, type WebSocket } from 'ws';
-import { Game, RULE_PROFILES, battingSide, fieldingSide, parseAction, parsePlayerInput, parseTeamInput, type Side } from '@seamcast/core';
+import { Game, RULE_PROFILES, battingSide, detectEvent, fieldingSide, isGameEvent, parseAction, parsePlayerInput, parseTeamInput, type GameEvent, type Side } from '@seamcast/core';
 import { createRepo, openDatabase } from './db.js';
 import { buildLineup, currentBatterId, currentPitcherId, emptyLineups, parseSlots, readLineups, withPitcher, type Lineups } from './lineup.js';
 import { buildCard, emptyMatchup, readMatchup, type Matchup } from './cards.js';
@@ -97,12 +97,12 @@ async function listProfiles(dir: string): Promise<Array<{ id: string; name: stri
 }
 
 /** Grafiken, für die ein eigenes Layout (Profil) gewählt werden kann. Die Aufstellung (Gast/Heim) teilt sich eines. */
-const LAYOUT_TARGETS = ['scoreboard', 'batter', 'pitcher', 'lineup'] as const;
+const LAYOUT_TARGETS = ['scoreboard', 'batter', 'pitcher', 'lineup', 'events'] as const;
 type LayoutTarget = (typeof LAYOUT_TARGETS)[number];
 /** Profilkennung je Grafik; null = folgt dem Grundprofil. */
 type Layouts = Record<LayoutTarget, string | null>;
 
-const emptyLayouts = (): Layouts => ({ scoreboard: null, batter: null, pitcher: null, lineup: null });
+const emptyLayouts = (): Layouts => ({ scoreboard: null, batter: null, pitcher: null, lineup: null, events: null });
 
 function readLayouts(saved: unknown, known: Array<{ id: string }>): Layouts {
   const result = emptyLayouts();
@@ -141,11 +141,20 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
   let lineups: Lineups = emptyLineups();
   let profileId = 'default';
   let layouts: Layouts = emptyLayouts();
+  /** Einblendungen (Homerun, Grand Slam, Strikeout) automatisch zeigen? */
+  let animations = true;
+  /** Letztes Ereignis für die Einblendung; die laufende Nummer lässt Overlays ein neues Ereignis erkennen. */
+  let lastEvent: { id: number; kind: GameEvent } | null = null;
+  let eventSeq = 0;
+  const raiseEvent = (kind: GameEvent) => {
+    eventSeq += 1;
+    lastEvent = { id: eventSeq, kind };
+  };
   const profileList = await listProfiles(profilesDir);
 
   const persistence = createPersistence(
     path.join(dataDir, 'game.json'),
-    () => ({ ...game.snapshot(), graphics, matchup, lineups, profile: profileId, layouts }),
+    () => ({ ...game.snapshot(), graphics, matchup, lineups, profile: profileId, layouts, animations }),
     log,
   );
 
@@ -160,6 +169,7 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
       const savedProfile = (saved as { profile?: unknown }).profile;
       if (typeof savedProfile === 'string' && profileList.some((x) => x.id === savedProfile)) profileId = savedProfile;
       layouts = readLayouts(saved, profileList);
+      if (typeof (saved as { animations?: unknown }).animations === 'boolean') animations = (saved as { animations: boolean }).animations;
       log('Spielstand aus der letzten Sitzung wiederhergestellt.');
     } else {
       log('Gespeicherter Spielstand ist ungültig und wird ignoriert.');
@@ -204,6 +214,8 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
       current: now,
       profile: profileId,
       layouts,
+      animations,
+      event: lastEvent,
       profiles: profileList,
       lineups: { away: buildLineup(repo, lineups.away), home: buildLineup(repo, lineups.home) },
       status: { overlays: count('overlay'), controls: count('control') },
@@ -524,9 +536,24 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
       case 'action': {
         const action = parseAction(input.action);
         if (!action) return reject(ws);
+        const before = game.state;
         changed = game.dispatch(action);
+        // Homerun, Grand Slam und Strikeout lösen die Einblendung aus (nur bei neuer Aktion, nie bei Rückgängig)
+        const event = changed && animations ? detectEvent(before, action, game.state) : null;
+        if (event) raiseEvent(event);
         break;
       }
+      case 'animations':
+        if (typeof input.enabled !== 'boolean') return reject(ws);
+        changed = animations !== input.enabled;
+        animations = input.enabled;
+        break;
+      case 'event':
+        // Testauslösung von Hand (Einstellungsseite); zählt immer, auch wenn die Animationen aus sind
+        if (!isGameEvent(input.kind)) return reject(ws);
+        raiseEvent(input.kind);
+        changed = true;
+        break;
       case 'undo':
         changed = game.undo();
         break;

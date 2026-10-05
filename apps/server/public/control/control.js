@@ -42,6 +42,8 @@ function render(msg) {
   $('toggle-scoreboard').dataset.on = String(msg.graphics.scoreboard);
   $('toggle-scoreboard').textContent = msg.graphics.scoreboard ? 'Scoreboard: AN' : 'Scoreboard: AUS';
   $('chip-overlays').textContent = `Overlays: ${msg.status.overlays}`;
+  $('toggle-animations').dataset.on = String(msg.animations !== false);
+  $('toggle-animations').textContent = msg.animations !== false ? 'Animationen: AN' : 'Animationen: AUS';
 
   renderPickers();
   renderCardToggles();
@@ -227,6 +229,9 @@ fitPreview();
 
 $('undo').addEventListener('click', () => send({ type: 'undo' }));
 $('hide-all').addEventListener('click', () => send({ type: 'hideAll' }));
+$('toggle-animations').addEventListener('click', () => {
+  if (last) send({ type: 'animations', enabled: last.animations === false });
+});
 $('toggle-scoreboard').addEventListener('click', () => {
   if (last) send({ type: 'graphics', id: 'scoreboard', visible: !last.graphics.scoreboard });
 });

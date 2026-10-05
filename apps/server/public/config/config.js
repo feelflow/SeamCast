@@ -1,7 +1,7 @@
 'use strict';
 
 const $ = (id) => document.getElementById(id);
-const GRAPHICS = ['scoreboard', 'batter', 'pitcher', 'lineup'];
+const GRAPHICS = ['scoreboard', 'batter', 'pitcher', 'lineup', 'events'];
 let ws = null;
 let last = null;
 let retry = 500;
@@ -149,4 +149,8 @@ window.addEventListener('focus', loadRoster);
 $('url-scoreboard').textContent = `${location.origin}/overlay/scoreboard.html`;
 $('url-players').textContent = `${location.origin}/overlay/players.html`;
 $('url-lineup').textContent = `${location.origin}/overlay/lineup.html`;
+$('url-events').textContent = `${location.origin}/overlay/events.html`;
+for (const button of document.querySelectorAll('button[data-test]')) {
+  button.addEventListener('click', () => send({ type: 'event', kind: button.dataset.test }));
+}
 connect();
