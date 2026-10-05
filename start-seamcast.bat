@@ -13,6 +13,12 @@ if errorlevel 1 (
 )
 
 echo Suche nach Updates ...
+git checkout main
+if errorlevel 1 (
+  echo Der Wechsel auf "main" hat nicht geklappt, vermutlich wegen eigener Aenderungen im Ordner.
+  echo SeamCast startet mit dem bisherigen Stand. Bitte die Meldung oben ansehen.
+  pause
+)
 git pull --ff-only
 echo Pruefe Abhaengigkeiten ...
 call pnpm install --frozen-lockfile

@@ -16,7 +16,7 @@ Nachfolger des alten WinForms-Tools „Baseball-TV-Manager". Besitzer: Florian H
 
 ## Befehle
 - `pnpm install`, `pnpm start` (Port 8080), `pnpm typecheck`, `pnpm test` – vor jedem Commit müssen Typecheck und Tests grün sein.
-- Windows-Start für den Nutzer: `start-seamcast.bat`.
+- Windows-Start für den Nutzer: `start-seamcast.bat` (wechselt selbst auf `main` und holt Updates; der Nutzer muss nichts manuell tun, solange keine eigenen Änderungen im Ordner liegen).
 - Manuell prüfen: `SEAMCAST_PORT=8099 SEAMCAST_DATA=/tmp/x pnpm start`, beenden mit `fuser -k 8099/tcp` (nicht `pkill -f`, das killt die eigene Shell). Screenshots mit Playwright und `/opt/pw-browsers/chromium`.
 
 ## Regeln für Änderungen
