@@ -1,0 +1,56 @@
+/* Design "tafel": klassische Anzeigetafel mit dunklen Glanzfeldern (Profil: "design": "tafel") */
+#tafel { display: none; }
+body[data-design='tafel'] #scoreboard { display: none; }
+body[data-design='tafel'] #tafel {
+  display: grid;
+  grid-template-columns: auto auto auto auto auto;
+  grid-template-rows: 1fr 1fr;
+  grid-template-areas:
+    'name1 score1 field inning pitch'
+    'name2 score2 field count out';
+  gap: 0.14em;
+  position: absolute;
+  padding: 0.14em;
+  font-size: calc(30px * var(--scale));
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  color: var(--panel-text);
+  background: var(--tafel-frame, #d8d8d8);
+  border-radius: calc(var(--radius) / 2);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+body[data-design='tafel'][data-position='bottom-left'] #tafel { left: var(--margin); bottom: var(--margin); }
+body[data-design='tafel'][data-position='bottom-right'] #tafel { right: var(--margin); bottom: var(--margin); }
+body[data-design='tafel'][data-position='top-left'] #tafel { left: var(--margin); top: var(--margin); }
+body[data-design='tafel'][data-position='top-right'] #tafel { right: var(--margin); top: var(--margin); }
+body[data-design='tafel'][data-graphic='off'] #tafel { opacity: 0; transform: translateY(12px); }
+body[data-design='tafel']:not([data-live='true']) #tafel { opacity: 0; }
+body[data-design='tafel'][data-role='preview'][data-onair='false'] #tafel { opacity: 0.25; }
+
+.t-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.7em;
+  min-height: 1.9em;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  background: linear-gradient(var(--tafel-top, #3a3a3a), var(--panel) 55%, var(--tafel-top, #3a3a3a) 130%);
+}
+.t-name { justify-content: flex-start; min-width: 3.4em; padding-left: 0.6em; font-size: 1.1em; }
+.t-name[data-batting='true'] { color: var(--accent); }
+.t-score { min-width: 1.9em; background: var(--score-bg); color: var(--score-text); font-size: 1.1em; }
+.t-field { grid-area: field; padding: 0.15em 0.3em; }
+.t-field svg { height: 3.4em; width: 3.4em; }
+.t-grass { fill: var(--tafel-field, #2f6a2a); stroke: #fff; stroke-width: 1.5; }
+.t-mound { fill: #c9a26b; }
+.t-base { fill: var(--base-off); stroke: #222; stroke-width: 1.5; transform-box: fill-box; transform-origin: center; transform: rotate(45deg) scale(0.62); }
+.t-base.on { fill: var(--base-on); }
+.t-inning, .t-pitch, .t-count, .t-out { font-size: 0.85em; min-width: 3.6em; }
+.t-count { font-size: 1.1em; }
+#t-name-away { grid-area: name1; } #t-score-away { grid-area: score1; }
+#t-name-home { grid-area: name2; } #t-score-home { grid-area: score2; }
+#t-inning { grid-area: inning; } #t-pitch { grid-area: pitch; }
+#t-count { grid-area: count; } #t-out { grid-area: out; }

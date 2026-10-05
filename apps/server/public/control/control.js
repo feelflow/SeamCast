@@ -46,6 +46,13 @@ function render(msg) {
   renderPickers();
   renderCardToggles();
   renderLineup();
+  const design = $('design');
+  const designSig = JSON.stringify(msg.profiles);
+  if (design.dataset.sig !== designSig) {
+    design.dataset.sig = designSig;
+    design.replaceChildren(...msg.profiles.map((p) => new Option(p.name, p.id)));
+  }
+  design.value = msg.profile;
   const select = $('rules');
   if (select.options.length === 0) {
     for (const rules of Object.values(msg.rules)) {
@@ -444,3 +451,5 @@ for (const side of ['away', 'home']) {
     if (last) send({ type: 'graphics', id, visible: !last.graphics[id] });
   });
 }
+
+$('design').addEventListener('change', (event) => send({ type: 'profile', id: event.target.value }));
