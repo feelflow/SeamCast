@@ -31,6 +31,126 @@ body[data-role='preview'] .card[data-show='false'] { opacity: 0.25; transform: n
 .card[data-show='false'] { opacity: 0; transform: translateY(14px); }
 .card[data-layout='table'][data-pos$='right'][data-show='false'] { transform: translateX(130%); }
 
+/* ---- Kartenlayout „wide": breite Karte (Vorlage HDH-Batter, 786 × 177 px) ----
+   Links Vereinslogo, oben Nummer, Zusatzzeile und Name, unten Wertetabelle und Sponsor-Logo. */
+.card[data-layout='wide'] {
+  --u: calc(25px * var(--scale));
+  font-size: calc(25px * var(--scale));
+  width: 31.44em;
+  height: 7.08em;
+  display: block;
+  position: relative;
+  border-radius: 0 0 1.2em 0;
+  background: radial-gradient(ellipse 120% 170% at 0% 0%, var(--card-head, #2a3bb0) 0%, var(--card-head-end, #1b2870) 45%, var(--card-body, #070a1c) 100%);
+  box-shadow: none;
+  transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.22s linear;
+}
+.card[data-layout='wide'] .who { display: contents; }
+.card[data-layout='wide'] .role,
+.card[data-layout='wide'] .sub { display: none; }
+.card[data-layout='wide'] .club {
+  display: block;
+  position: absolute;
+  left: 0.4em;
+  top: 0.4em;
+  width: 6.56em;
+  height: 6.28em;
+  object-fit: contain;
+}
+.card[data-layout='wide'] .club[hidden] { display: none; }
+.card[data-layout='wide'] .num,
+.card[data-layout='wide'] .tag {
+  position: absolute;
+  left: 7.56em;
+  width: 1.12em;
+  min-width: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  background: transparent;
+  color: var(--panel-text);
+  font-weight: 400;
+  white-space: nowrap;
+}
+.card[data-layout='wide'] .num { top: 0.52em; }
+.card[data-layout='wide'] .tag { top: 1.92em; padding-top: 0.12em; border-top: 2px solid var(--panel-text); }
+.card[data-layout='wide'] .tag[hidden] { display: none; }
+.card[data-layout='wide'] .name {
+  position: absolute;
+  /* in Karten-Einheiten (25 px), damit die Lage auch bei verkleinerter Schrift gleich bleibt */
+  left: calc(var(--u) * 9.68);
+  right: calc(var(--u) * 1);
+  top: calc(var(--u) * 1.04);
+  height: calc(var(--u) * 1.68);
+  align-items: center;
+  font-size: 1.4em;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.card[data-layout='wide'] .name b { font-weight: 700; letter-spacing: 0; }
+.card[data-layout='wide'] .stats {
+  position: absolute;
+  left: 7.4em;
+  top: 3.52em;
+  right: 0;
+  bottom: 0;
+  display: grid;
+  grid-template-columns: 4.04em 4.08em 4.08em 4.08em 1fr;
+  border-left: none;
+}
+.card[data-layout='wide'] .stats::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  transition: opacity 0.12s linear;
+}
+.card[data-layout='wide'] .stats::after { content: ''; grid-row: 1; grid-column: 5; border-left: 1px solid var(--card-line, #2a2f4d); position: relative; }
+.card[data-layout='wide'] .stat {
+  position: relative;
+  z-index: 1;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0;
+  min-width: 0;
+  padding: 0.48em 0 0;
+  box-sizing: border-box;
+  grid-row: 1;
+}
+.card[data-layout='wide'] .stat + .stat { border-left: 1px solid var(--card-line, #2a2f4d); }
+.card[data-layout='wide'] .stat small {
+  font-size: 1em;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.2;
+  color: var(--panel-text);
+  text-transform: uppercase;
+}
+.card[data-layout='wide'] .stat b { font-size: 1.2em; font-weight: 700; line-height: 1.2; }
+.card[data-layout='wide'] .stat.pc b { color: var(--panel-text); }
+.card[data-layout='wide'] .sponsor {
+  position: absolute;
+  left: 24.96em;
+  top: 4.44em;
+  height: 1.64em;
+}
+.card[data-layout='wide'][data-show='false'] { opacity: 0; transform: translateX(-130%); }
+.card[data-layout='wide'][data-pos$='right'][data-show='false'] { transform: translateX(130%); }
+.card[data-layout='wide'] :is(.club, .num, .tag, .name, .stat, .sponsor, .stats::before) { transition: opacity 0.12s linear; }
+.card[data-layout='wide'][data-show='false'] :is(.club, .num, .tag, .name, .stat, .sponsor) { opacity: 0; transition-delay: 0s; }
+.card[data-layout='wide'][data-show='false'] .stats::before { opacity: 0; transition-delay: 0s; }
+.card[data-layout='wide'][data-show='true'] .club { transition-delay: 0.22s; }
+.card[data-layout='wide'][data-show='true'] :is(.num, .tag, .name) { transition-delay: 0.26s; }
+.card[data-layout='wide'][data-show='true'] .stats::before { transition-delay: 0.34s; }
+.card[data-layout='wide'][data-show='true'] .stat { transition-delay: 0.38s; }
+.card[data-layout='wide'][data-show='true'] .stat:nth-child(2) { transition-delay: 0.42s; }
+.card[data-layout='wide'][data-show='true'] .stat:nth-child(3) { transition-delay: 0.46s; }
+.card[data-layout='wide'][data-show='true'] .stat:nth-child(n + 4) { transition-delay: 0.5s; }
+.card[data-layout='wide'][data-show='true'] .sponsor { transition-delay: 0.6s; }
+body[data-role='preview'] .card[data-layout='wide'][data-show='false'] :is(.club, .num, .tag, .name, .stat, .sponsor) { opacity: 1; }
+body[data-role='preview'] .card[data-layout='wide'][data-show='false'] .stats::before { opacity: 1; }
+
 /* Karte mit eigener Position: unabhängig von den anderen Karten am Bildschirmrand verankert */
 .card[data-pos] { position: fixed; }
 .card[data-pos^='top'] { top: var(--margin-y, var(--margin)); }
@@ -68,7 +188,8 @@ body[data-role='preview'] .card[data-show='false'] { opacity: 0.25; transform: n
 body[data-role='preview'] { background: transparent; }
 
 .sponsor { display: block; }
-.sponsor[hidden] { display: none; }
+.sponsor[hidden], .club[hidden], .tag[hidden] { display: none; }
+.club, .tag { display: none; }
 
 /* ---- Kartenlayout „table": senkrechte Karte mit Kopfzeile und Wertetabelle (Vorlage HDH) ----
    1em = 25 px bei Skalierung 1; Maße stammen aus der Loopic-Vorlage (Karte 521 × 449 px). */

@@ -22,7 +22,10 @@
   "radius": 10,
   "labels": { "top": "▲", "bottom": "▼", "out": "OUT", "pitch": "P" },
   "show": { "pitchCount": true, "bases": true, "count": true, "outs": true },
-  "layout": { "position": "top-left", "margin": 40 },
+  "layout": {
+    "position": "top-left",
+    "margin": 40
+  },
   "cards": {
     "position": "bottom-left",
     "margin": 40,
@@ -30,8 +33,12 @@
     "marginY": 43,
     "batter": {
       "label": "AM SCHLAG",
-      "position": "bottom-right",
-      "stats": [["avg", "AVG"], ["obp", "OBP"], ["ops", "OPS"], ["hr", "HR"], ["rbi", "RBI"]]
+      "layout": "wide",
+      "position": "bottom-left",
+      "teamLogo": true,
+      "tag": "pos",
+      "logo": "voith.jpg",
+      "stats": [["avg", "AVG"], ["hr", "HR"], ["rbi", "RBI"], ["obp", "OBP"]]
     },
     "pitcher": {
       "label": "PITCHER",

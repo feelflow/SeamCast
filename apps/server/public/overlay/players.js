@@ -23,6 +23,8 @@ const body = document.body;
 const $ = (id) => document.getElementById(id);
 body.dataset.role = role;
 
+const FILE_NAME = /^[A-Za-z0-9_][A-Za-z0-9._-]{0,99}$/;
+const TAG_KEYS = ['pos', 'bats', 'throws', 'teamShort'];
 const CARD_POSITIONS = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
 const STALE_MS = 40000;
 let staleTimer = null;
@@ -74,14 +76,14 @@ function renderCard(kind, card, visible, extras) {
   const section = $(`card-${kind}`);
   section.hidden = !card;
   if (!card) return;
-  section.dataset.layout = config[kind].layout === 'table' ? 'table' : 'row';
+  section.dataset.layout = ['table', 'wide'].includes(config[kind].layout) ? config[kind].layout : 'row';
   // Eigene Position je Karte (Profil: cards.<batter|pitcher>.position); ohne Angabe reiht sich die Karte in die Gruppe ein
   const pos = CARD_POSITIONS.includes(config[kind].position) ? config[kind].position : '';
   if (pos) section.dataset.pos = pos;
   else delete section.dataset.pos;
   const logo = $(`${kind}-logo`);
   // Logo = reiner Dateiname aus config/assets (Profil: cards.<batter|pitcher>.logo)
-  const logoFile = /^[A-Za-z0-9][A-Za-z0-9._-]{0,80}$/.test(config[kind].logo ?? '') ? config[kind].logo : '';
+  const logoFile = FILE_NAME.test(config[kind].logo ?? '') ? config[kind].logo : '';
   if (logoFile) {
     const src = `/assets/${logoFile}`;
     if (logo.getAttribute('src') !== src) logo.setAttribute('src', src);
@@ -89,6 +91,20 @@ function renderCard(kind, card, visible, extras) {
     logo.removeAttribute('src');
   }
   logo.hidden = !logoFile;
+  // Vereinslogo aus dem Kader (Datei in config/assets), nur wenn das Profil es verlangt
+  const club = $(`${kind}-club`);
+  const clubFile = config[kind].teamLogo && FILE_NAME.test(card.teamLogo ?? '') ? card.teamLogo : '';
+  if (clubFile) {
+    const src = `/assets/${clubFile}`;
+    if (club.getAttribute('src') !== src) club.setAttribute('src', src);
+  } else {
+    club.removeAttribute('src');
+  }
+  club.hidden = !clubFile;
+  // Zusatzzeile unter der Nummer (Profil: tag = pos | bats | throws | teamShort; pos = Position aus der Aufstellung)
+  const tag = $(`${kind}-tag`);
+  tag.textContent = TAG_KEYS.includes(config[kind].tag) ? String(card[config[kind].tag] ?? '') : '';
+  tag.hidden = !tag.textContent;
   $(`${kind}-num`).textContent = card.number === null ? '' : String(card.number);
   $(`${kind}-num`).hidden = card.number === null;
   $(`${kind}-role`).textContent = config[kind].label ?? '';
@@ -101,7 +117,20 @@ function renderCard(kind, card, visible, extras) {
   const cells = (config[kind].stats ?? []).map(([key, label]) => statCell(String(label), card.stats[key] ?? '–'));
   if (extras) cells.push(extras);
   $(`${kind}-stats`).replaceChildren(...cells);
+  fitName(section);
   section.dataset.show = visible ? 'true' : 'false';
+}
+
+/** Lange Namen verkleinern, bis sie in die Karte passen (nicht unter 60 % der Schriftgröße). */
+function fitName(section) {
+  const name = section.querySelector('.name');
+  name.style.fontSize = '';
+  const wide = section.dataset.layout === 'wide';
+  if (!wide && section.dataset.layout !== 'table') return;
+  const limit = wide ? () => name.clientWidth : () => name.parentElement.clientWidth;
+  const width = wide ? () => name.scrollWidth : () => name.offsetWidth;
+  const base = parseFloat(getComputedStyle(name).fontSize);
+  for (let size = base - 1; size >= base * 0.6 && width() > limit(); size -= 1) name.style.fontSize = `${size}px`;
 }
 
 function render(msg) {

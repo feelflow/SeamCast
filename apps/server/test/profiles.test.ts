@@ -19,7 +19,7 @@ describe('Grafikprofile', () => {
       expect(profile.colors).toBeTypeOf('object');
       expect([undefined, 'modern', 'tafel']).toContain(profile.design);
       for (const kind of ['batter', 'pitcher']) {
-        expect([undefined, 'row', 'table']).toContain(profile.cards?.[kind]?.layout);
+        expect([undefined, 'row', 'table', 'wide']).toContain(profile.cards?.[kind]?.layout);
         expect([undefined, 'top-left', 'top-right', 'bottom-left', 'bottom-right']).toContain(profile.cards?.[kind]?.position);
       }
     }

@@ -1,5 +1,6 @@
 import type { Side } from '@seamcast/core';
 import type { Repo } from './db.js';
+import type { Lineups } from './lineup.js';
 import { statLines } from './statlines.js';
 
 /** Aktueller Schlagmann und Pitcher je Mannschaft (Spieler-IDs aus der Datenbank). */
@@ -33,14 +34,23 @@ export interface Card {
   lastName: string;
   number: number | null;
   teamShort: string;
+  /** Logo-Datei der Mannschaft (reiner Dateiname aus dem Kader, liegt in config/assets); leer, wenn keine hinterlegt ist */
+  teamLogo: string;
   bats: string;
   throws: string;
+  /** Feldposition laut Aufstellung dieses Spiels (z. B. 3B); leer, wenn der Spieler in keiner Aufstellung steht */
+  pos: string;
   /** Alle verfügbaren Kennzahlen als Text; welche gezeigt werden, bestimmt das Profil */
   stats: Record<string, string>;
 }
 
 /** Baut die Anzeige-Daten einer Spielerkarte; null, wenn der Spieler nicht (mehr) existiert. */
-export function buildCard(repo: Repo, role: 'batter' | 'pitcher', playerId: number | null): Card | null {
+export function buildCard(
+  repo: Repo,
+  role: 'batter' | 'pitcher',
+  playerId: number | null,
+  lineups: Lineups = { away: [], home: [] },
+): Card | null {
   if (playerId === null) return null;
   const player = repo.getPlayer(playerId);
   if (!player) return null;
@@ -53,6 +63,7 @@ export function buildCard(repo: Repo, role: 'batter' | 'pitcher', playerId: numb
       if (typeof value === 'number' || typeof value === 'string') stats[key] = String(value);
     }
   }
+  const slot = [...lineups.away, ...lineups.home].find((x) => x.playerId === playerId);
   return {
     playerId,
     name: `${player.firstName} ${player.lastName}`.trim(),
@@ -60,8 +71,10 @@ export function buildCard(repo: Repo, role: 'batter' | 'pitcher', playerId: numb
     lastName: player.lastName,
     number: player.number,
     teamShort: team?.short ?? '',
+    teamLogo: team?.logo ?? '',
     bats: player.bats,
     throws: player.throws,
+    pos: slot?.pos ?? '',
     stats,
   };
 }
