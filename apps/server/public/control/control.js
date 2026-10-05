@@ -29,8 +29,10 @@ function render(msg) {
   $('sum-state').textContent =
     `${dots} ${g.inning}. Inning · ${g.balls}-${g.strikes} · ${g.outs} Out · ` +
     `Bases ${g.bases.map((b, i) => (b ? i + 1 : '–')).join(' ')}`;
-  $('lbl-away').textContent = `${g.teams.away.name} (Gast)`;
-  $('lbl-home').textContent = `${g.teams.home.name} (Heim)`;
+  $('lbl-away').textContent = `${g.teams.away.short} · Gast`;
+  $('lbl-away').title = g.teams.away.name;
+  $('lbl-home').textContent = `${g.teams.home.short} · Heim`;
+  $('lbl-home').title = g.teams.home.name;
   g.bases.forEach((on, i) => {
     $(`base-btn-${i}`).dataset.on = String(on);
     $(`runner-out-${i}`).disabled = !on;
@@ -226,6 +228,8 @@ function fitPreview() {
 }
 window.addEventListener('resize', fitPreview);
 fitPreview();
+// Auf hohen Bildschirmen ist Platz: Tastenkürzel gleich aufgeklappt zeigen
+if (window.innerHeight >= 860) $('keys').open = true;
 
 $('undo').addEventListener('click', () => send({ type: 'undo' }));
 $('hide-all').addEventListener('click', () => send({ type: 'hideAll' }));
@@ -354,11 +358,11 @@ function renderPickers() {
 }
 
 function renderCardToggles() {
-  for (const [id, label] of [['batter', 'Schlagmann'], ['pitcher', 'Pitcher']]) {
+  for (const id of ['batter', 'pitcher']) {
     const on = Boolean(last.graphics[id]);
     const button = $(`toggle-${id}`);
     button.dataset.on = String(on);
-    button.textContent = on ? `${label}: AN (ausblenden)` : `${label} einblenden`;
+    button.textContent = on ? 'AN – ausblenden' : 'Einblenden';
     button.disabled = !on && !last.cards[id];
   }
 }
@@ -432,7 +436,8 @@ function renderLineup() {
     const on = Boolean(last.graphics[side === 'away' ? 'lineupAway' : 'lineupHome']);
     const button = $(`lu-toggle-${side}`);
     button.dataset.on = String(on);
-    button.textContent = on ? 'AN (ausblenden)' : 'Einblenden';
+    button.textContent = `${g.teams[side].short || (side === 'away' ? 'Gast' : 'Heim')}: ${on ? 'AN' : 'einblenden'}`;
+    button.title = `Aufstellung ${g.teams[side].name || ''} ${on ? 'ausblenden' : 'einblenden'}`.trim();
     button.disabled = !on && last.lineups[side].length === 0;
   }
   if (signature === lineupSignature) return;
