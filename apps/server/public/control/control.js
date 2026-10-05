@@ -310,6 +310,11 @@ function renderPickers() {
   $('team-batter').textContent = g.teams[batting].short;
   $('team-batter-auto').textContent = g.teams[batting].short;
   $('team-pitcher').textContent = g.teams[fielding].short;
+  $('lbl-pitcher').hidden = auto.pitcher;
+  $('pitcher-auto').hidden = !auto.pitcher;
+  $('team-pitcher-auto').textContent = g.teams[fielding].short;
+  const pc = last.cards.pitcher;
+  $('auto-pitcher-name').textContent = pc ? `${pc.number === null ? '' : `#${pc.number} `}${pc.name}` : '–';
   $('lbl-batter').hidden = auto.batter;
   $('batter-auto').hidden = !auto.batter;
   const card = last.cards.batter;
