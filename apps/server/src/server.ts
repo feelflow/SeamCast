@@ -161,8 +161,8 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
       graphics,
       matchup,
       cards: {
-        batter: buildCard(repo, 'batter', matchup.batter[battingSide(game.state)]),
-        pitcher: buildCard(repo, 'pitcher', matchup.pitcher[fieldingSide(game.state)]),
+        batter: buildCard(repo, 'batter', matchup.batter[battingSide(game.state)], lineups),
+        pitcher: buildCard(repo, 'pitcher', matchup.pitcher[fieldingSide(game.state)], lineups),
       },
       profile: profileId,
       profiles: profileList,

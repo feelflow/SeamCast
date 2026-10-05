@@ -34,6 +34,7 @@ body[data-role='preview'] .card[data-show='false'] { opacity: 0.25; transform: n
 /* ---- Kartenlayout „wide": breite Karte (Vorlage HDH-Batter, 786 × 177 px) ----
    Links Vereinslogo, oben Nummer, Zusatzzeile und Name, unten Wertetabelle und Sponsor-Logo. */
 .card[data-layout='wide'] {
+  --u: calc(25px * var(--scale));
   font-size: calc(25px * var(--scale));
   width: 31.44em;
   height: 7.08em;
@@ -76,10 +77,12 @@ body[data-role='preview'] .card[data-show='false'] { opacity: 0.25; transform: n
 .card[data-layout='wide'] .tag[hidden] { display: none; }
 .card[data-layout='wide'] .name {
   position: absolute;
-  /* Maße in em des Namens (1.4 × 25 px = 35 px): links 242 px, oben 29,5 px, rechts 25 px */
-  left: 6.914em;
-  right: 0.714em;
-  top: 0.843em;
+  /* in Karten-Einheiten (25 px), damit die Lage auch bei verkleinerter Schrift gleich bleibt */
+  left: calc(var(--u) * 9.68);
+  right: calc(var(--u) * 1);
+  top: calc(var(--u) * 1.04);
+  height: calc(var(--u) * 1.68);
+  align-items: center;
   font-size: 1.4em;
   font-weight: 700;
   white-space: nowrap;

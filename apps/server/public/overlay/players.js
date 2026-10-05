@@ -24,7 +24,7 @@ const $ = (id) => document.getElementById(id);
 body.dataset.role = role;
 
 const FILE_NAME = /^[A-Za-z0-9_][A-Za-z0-9._-]{0,99}$/;
-const TAG_KEYS = ['bats', 'throws', 'teamShort'];
+const TAG_KEYS = ['pos', 'bats', 'throws', 'teamShort'];
 const CARD_POSITIONS = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
 const STALE_MS = 40000;
 let staleTimer = null;
@@ -101,7 +101,7 @@ function renderCard(kind, card, visible, extras) {
     club.removeAttribute('src');
   }
   club.hidden = !clubFile;
-  // Zusatzzeile unter der Nummer (Profil: tag = bats | throws | teamShort)
+  // Zusatzzeile unter der Nummer (Profil: tag = pos | bats | throws | teamShort; pos = Position aus der Aufstellung)
   const tag = $(`${kind}-tag`);
   tag.textContent = TAG_KEYS.includes(config[kind].tag) ? String(card[config[kind].tag] ?? '') : '';
   tag.hidden = !tag.textContent;
@@ -117,7 +117,20 @@ function renderCard(kind, card, visible, extras) {
   const cells = (config[kind].stats ?? []).map(([key, label]) => statCell(String(label), card.stats[key] ?? '–'));
   if (extras) cells.push(extras);
   $(`${kind}-stats`).replaceChildren(...cells);
+  fitName(section);
   section.dataset.show = visible ? 'true' : 'false';
+}
+
+/** Lange Namen verkleinern, bis sie in die Karte passen (nicht unter 60 % der Schriftgröße). */
+function fitName(section) {
+  const name = section.querySelector('.name');
+  name.style.fontSize = '';
+  const wide = section.dataset.layout === 'wide';
+  if (!wide && section.dataset.layout !== 'table') return;
+  const limit = wide ? () => name.clientWidth : () => name.parentElement.clientWidth;
+  const width = wide ? () => name.scrollWidth : () => name.offsetWidth;
+  const base = parseFloat(getComputedStyle(name).fontSize);
+  for (let size = base - 1; size >= base * 0.6 && width() > limit(); size -= 1) name.style.fontSize = `${size}px`;
 }
 
 function render(msg) {

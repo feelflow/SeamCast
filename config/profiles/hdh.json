@@ -36,7 +36,7 @@
       "layout": "wide",
       "position": "bottom-left",
       "teamLogo": true,
-      "tag": "bats",
+      "tag": "pos",
       "logo": "voith.jpg",
       "stats": [["avg", "AVG"], ["hr", "HR"], ["rbi", "RBI"], ["obp", "OBP"]]
     },

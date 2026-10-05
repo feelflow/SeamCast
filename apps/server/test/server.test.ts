@@ -236,6 +236,16 @@ describe('Aufstellung', () => {
     const snap = await untilL((s) => s.lineups?.home.length === 2);
     expect(snap.lineups.home[0]).toMatchObject({ lastName: 'Eins', order: 1, pos: 'P' });
 
+    // Die Karte übernimmt die Position aus der Aufstellung; ohne Aufstellung bleibt sie leer
+    type PosSnap = Snap & { cards: { batter: { lastName: string; pos: string } | null } };
+    const untilP = control.until as unknown as (t: (s: PosSnap) => boolean) => Promise<PosSnap>;
+    control.send({ type: 'select', role: 'batter', side: 'away', playerId: b.id });
+    expect((await untilP((s) => s.cards?.batter?.lastName === 'Zwei')).cards.batter?.pos).toBe('C');
+    control.send({ type: 'lineup', side: 'home', slots: [{ playerId: a.id, pos: 'P' }] });
+    expect((await untilP((s) => s.cards?.batter?.lastName === 'Zwei' && s.cards.batter.pos === '')).cards.batter?.pos).toBe('');
+    control.send({ type: 'lineup', side: 'home', slots: [{ playerId: a.id, pos: 'p' }, { playerId: b.id, pos: 'C' }] });
+    await untilL((s) => s.lineups?.home.length === 2);
+
     const errors: unknown[] = [];
     control.ws.on('message', (d) => {
       const m = JSON.parse(d.toString()) as { type: string };
