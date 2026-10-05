@@ -391,6 +391,7 @@ function lineupRows(side) {
     pos.value = draft[i]?.pos ?? '';
     const update = () => {
       lineupDraft[side][i] = pick.value === '' ? null : { playerId: Number(pick.value), pos: pos.value };
+      saveLineup(side);
     };
     pick.addEventListener('change', update);
     pos.addEventListener('change', update);
@@ -423,11 +424,18 @@ function renderLineup() {
   }
 }
 
+/** Aufstellung sofort speichern, sobald sich etwas ändert (kein Speichern-Knopf nötig). Doppelte Spieler werden nicht gesendet. */
+function saveLineup(side) {
+  const slots = lineupDraft[side].filter(Boolean);
+  const duplicate = new Set(slots.map((x) => x.playerId)).size !== slots.length;
+  $(`lu-msg-${side}`).hidden = !duplicate;
+  if (!duplicate) send({ type: 'lineup', side, slots });
+}
+
+// Nach dem Bearbeiten (Fokus verlässt die Aufstellung) die gespeicherte Fassung neu anzeigen
+$('lineup-panel').addEventListener('focusout', () => setTimeout(renderLineup, 50));
+
 for (const side of ['away', 'home']) {
-  $(`lu-save-${side}`).addEventListener('click', () => {
-    const slots = lineupDraft[side].filter(Boolean);
-    send({ type: 'lineup', side, slots });
-  });
   $(`lu-toggle-${side}`).addEventListener('click', () => {
     const id = side === 'away' ? 'lineupAway' : 'lineupHome';
     if (last) send({ type: 'graphics', id, visible: !last.graphics[id] });

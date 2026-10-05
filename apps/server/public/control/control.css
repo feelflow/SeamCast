@@ -94,3 +94,4 @@ label small:empty { display: none; }
 .auto-title { font-size: 13px; color: var(--muted, #667); }
 .auto-who { font-size: 22px; font-weight: 700; margin: 2px 0; }
 .auto-sub { font-size: 13px; color: var(--muted, #667); margin-bottom: 8px; }
+.hint.warn { color: #b3261e; }
