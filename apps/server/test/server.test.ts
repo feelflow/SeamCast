@@ -7,7 +7,7 @@ import { startServer, type RunningServer } from '../src/server.js';
 
 interface Snap {
   type: string;
-  game: { score: { away: number; home: number }; balls: number; strikes: number; outs: number };
+  game: { score: { away: number; home: number }; balls: number; strikes: number; outs: number; bases: boolean[] };
   canUndo: boolean;
   graphics: { scoreboard: boolean };
   status: { overlays: number; controls: number };
@@ -300,12 +300,12 @@ describe('Layout je Grafik', () => {
     await control.ready;
     const untilL = control.until as unknown as (t: (s: LSnap) => boolean) => Promise<LSnap>;
     const first = await untilL((s) => typeof s.layouts === 'object');
-    expect(first.layouts).toEqual({ scoreboard: null, batter: null, pitcher: null, lineup: null });
+    expect(first.layouts).toEqual({ scoreboard: null, batter: null, pitcher: null, lineup: null, events: null });
 
     control.send({ type: 'layout', graphic: 'batter', id: 'hdh' });
     const afterBatter = await untilL((s) => s.layouts?.batter === 'hdh');
     // Nur diese Grafik ändert sich, das Grundprofil bleibt
-    expect(afterBatter.layouts).toEqual({ scoreboard: null, batter: 'hdh', pitcher: null, lineup: null });
+    expect(afterBatter.layouts).toEqual({ scoreboard: null, batter: 'hdh', pitcher: null, lineup: null, events: null });
     expect(afterBatter.profile).toBe('default');
 
     control.send({ type: 'layout', graphic: 'pitcher', id: 'hdh' });
@@ -333,7 +333,7 @@ describe('Layout je Grafik', () => {
     const again = open(server.port, 'control');
     await again.ready;
     const restored = await (again.until as unknown as (t: (s: LSnap) => boolean) => Promise<LSnap>)((s) => typeof s.layouts === 'object');
-    expect(restored.layouts).toEqual({ scoreboard: null, batter: null, pitcher: 'hdh', lineup: null });
+    expect(restored.layouts).toEqual({ scoreboard: null, batter: null, pitcher: 'hdh', lineup: null, events: null });
   });
 
   it('nimmt Layout-Befehle nur von der Bedienung an', async () => {
@@ -494,5 +494,72 @@ describe('Automatische Spielerkarten', () => {
     control.send({ type: 'lineup', side: 'home', slots: [{ playerId: a.id, pos: '' }, { playerId: b.id, pos: 'P' }] });
     const changed = await until((s) => s.cards?.pitcher?.lastName === 'Zwei');
     expect(changed.game.pitches.home).toBe(0);
+  });
+});
+
+describe('Einblendungen (Homerun, Grand Slam, Strikeout)', () => {
+  type ESnap = Snap & { animations: boolean; event: { id: number; kind: string } | null };
+  const connect = async (port: number) => {
+    const control = open(port, 'control');
+    await control.ready;
+    const until = control.until as unknown as (t: (s: ESnap) => boolean) => Promise<ESnap>;
+    await until((s) => s.status.controls === 1);
+    return { send: control.send, until };
+  };
+
+  it('meldet Strikeout, Homerun und Grand Slam mit steigender Nummer', async () => {
+    const { port } = await start();
+    const c = await connect(port);
+    for (let i = 0; i < 3; i += 1) c.send({ type: 'action', action: { type: 'strike' } });
+    const strikeout = await c.until((s) => s.event?.kind === 'strikeout');
+
+    c.send({ type: 'action', action: { type: 'hit', bases: 4 } });
+    const homerun = await c.until((s) => s.event?.kind === 'homerun');
+    expect(homerun.event!.id).toBeGreaterThan(strikeout.event!.id);
+
+    c.send({ type: 'action', action: { type: 'setBases', bases: [true, true, true] } });
+    c.send({ type: 'action', action: { type: 'hit', bases: 4 } });
+    const slam = await c.until((s) => s.event?.kind === 'grandslam');
+    expect(slam.event!.id).toBeGreaterThan(homerun.event!.id);
+  });
+
+  it('Foul, Single und Rückgängig lösen nichts aus', async () => {
+    const { port } = await start();
+    const c = await connect(port);
+    c.send({ type: 'action', action: { type: 'foul' } });
+    c.send({ type: 'action', action: { type: 'hit', bases: 1 } });
+    const after = await c.until((s) => s.game.bases[0] === true);
+    expect(after.event).toBeNull();
+    expect(after.animations).toBe(true);
+    c.send({ type: 'undo' });
+    expect((await c.until((s) => s.game.bases[0] === false)).event).toBeNull();
+  });
+
+  it('Animationen lassen sich ausschalten und bleiben gespeichert; Test geht immer', async () => {
+    const { port } = await start();
+    const c = await connect(port);
+    c.send({ type: 'animations', enabled: false });
+    await c.until((s) => s.animations === false);
+    c.send({ type: 'action', action: { type: 'hit', bases: 4 } });
+    expect((await c.until((s) => s.game.score.away === 1)).event).toBeNull();
+
+    c.send({ type: 'event', kind: 'strikeout' });
+    expect((await c.until((s) => s.event?.kind === 'strikeout')).animations).toBe(false);
+  });
+
+  it('lehnt ungültige Eingaben ab', async () => {
+    const { port } = await start();
+    const control = open(port, 'control');
+    await control.ready;
+    const errors: unknown[] = [];
+    control.ws.on('message', (d) => {
+      const m = JSON.parse(d.toString()) as { type: string };
+      if (m.type === 'error') errors.push(m);
+    });
+    control.send({ type: 'event', kind: 'blitz' });
+    control.send({ type: 'animations', enabled: 'ja' });
+    control.send({ type: 'layout', graphic: 'events', id: 'gibtsnicht' });
+    await new Promise((r) => setTimeout(r, 150));
+    expect(errors).toHaveLength(3);
   });
 });

@@ -37,6 +37,16 @@
         <label>Layout <select data-layout="pitcher"></select></label>
         <div class="pv"><iframe class="preview" title="Vorschau Pitcher" width="1920" height="1080" src="/overlay/players.html?role=preview&amp;only=pitcher"></iframe></div>
       </section>
+      <section class="panel" data-graphic="events">
+        <h2>Einblendungen (Homerun, Grand Slam, Strikeout)</h2>
+        <label>Layout <select data-layout="events"></select></label>
+        <div class="grid">
+          <button type="button" data-test="homerun">Homerun testen</button>
+          <button type="button" data-test="grandslam">Grand Slam testen</button>
+          <button type="button" data-test="strikeout">Strikeout testen</button>
+        </div>
+        <div class="pv"><iframe class="preview" title="Vorschau Einblendungen" width="1920" height="1080" src="/overlay/events.html?role=preview"></iframe></div>
+      </section>
       <section class="panel" data-graphic="lineup">
         <h2>Aufstellung</h2>
         <label>Layout <select data-layout="lineup"></select></label>
@@ -82,6 +92,7 @@
         <p class="hint">Scoreboard: <code id="url-scoreboard"></code></p>
         <p class="hint">Spielerkarten (Batter und Pitcher): <code id="url-players"></code></p>
         <p class="hint">Aufstellung (Gast und Heim): <code id="url-lineup"></code></p>
+        <p class="hint">Einblendungen (Homerun, Grand Slam, Strikeout; transparent, Größe 1920×1080): <code id="url-events"></code></p>
         <p class="hint">Mit <code>?profile=&lt;Name&gt;</code> hinter der Adresse bleibt die Grafik fest bei einem Layout, egal was hier gewählt ist.</p>
       </section>
     </div>

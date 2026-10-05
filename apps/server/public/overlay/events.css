@@ -1,0 +1,88 @@
+/* Einblendung für Homerun, Grand Slam und Strikeout (Balken oben links, Bühne 1920×1080).
+   Maße, Farben und Schrift kommen aus dem Profil (Abschnitt "events") und werden in events.js gesetzt. */
+:root {
+  --ev-x: 64px;
+  --ev-y: 40px;
+  --ev-w: 600px;
+  --ev-h: 112px;
+  --ev-base: #343434;
+  --ev-base-end: #0b0b0b;
+  --ev-hot: #950101;
+  --ev-text: #ffffff;
+  --ev-dot: #d8d8d8;
+  --ev-size: 88px;
+  --ev-font: 'Trebuchet MS', 'Segoe UI', Arial, sans-serif;
+}
+
+/* Streifen oben: Er schneidet die große Schrift ab, die durchs Bild wischt (wie im Video). */
+#strip {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1920px;
+  height: calc(var(--ev-y) + var(--ev-h));
+  overflow: hidden;
+  pointer-events: none;
+}
+
+#bar {
+  position: absolute;
+  left: var(--ev-x);
+  top: var(--ev-y);
+  width: var(--ev-w);
+  height: var(--ev-h);
+  overflow: hidden;
+  clip-path: inset(0 100% 0 0);
+}
+#bar[hidden],
+#label[hidden] { display: none; }
+
+#bar .base,
+#bar .hot {
+  position: absolute;
+  inset: 0;
+}
+#bar .base { background: linear-gradient(to bottom, var(--ev-base) 0%, var(--ev-base) 28%, var(--ev-base-end) 100%); }
+#bar .hot {
+  background: var(--ev-hot);
+  clip-path: ellipse(0% 0% at 50% 50%);
+}
+
+#bar .dots {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--ev-h) * 0.62);
+}
+#bar .dots i {
+  width: calc(var(--ev-h) * 0.62);
+  height: calc(var(--ev-h) * 0.62);
+  border-radius: 50%;
+  background: var(--ev-dot);
+  opacity: 0;
+}
+
+/* Beschriftung: gleiche Fläche wie der Balken; skaliert um einen Punkt links unten (Grundlinie),
+   so wischt die große Schrift von links ins Bild und schrumpft in den Balken. */
+#label {
+  position: absolute;
+  left: var(--ev-x);
+  top: var(--ev-y);
+  width: var(--ev-w);
+  height: var(--ev-h);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-origin: 22% 82%;
+  color: var(--ev-text);
+  font-family: var(--ev-font);
+  font-size: var(--ev-size);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  opacity: 0;
+}

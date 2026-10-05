@@ -299,5 +299,35 @@
         }
       }
     }
+  },
+  "events": {
+    "x": 64,
+    "y": 40,
+    "width": 600,
+    "height": 112,
+    "speed": 1,
+    "font": {
+      "family": "'Trebuchet MS', 'Segoe UI', Arial, sans-serif"
+    },
+    "colors": {
+      "base": "#343434",
+      "baseEnd": "#0b0b0b",
+      "hot": "#950101",
+      "text": "#ffffff",
+      "dot": "#d8d8d8"
+    },
+    "homerun": {
+      "text": "HOME RUN",
+      "size": 80
+    },
+    "grandslam": {
+      "text": "GRAND SLAM",
+      "text2": "HOME RUN",
+      "size": 80
+    },
+    "strikeout": {
+      "text": "STRIKE OUT",
+      "size": 68
+    }
   }
 }
