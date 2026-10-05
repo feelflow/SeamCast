@@ -35,7 +35,7 @@ Nachfolger des alten WinForms-Tools „Baseball-TV-Manager". Besitzer: Florian H
 - Spiellogik: Balls/Strikes/Outs, Hits mit Läufer-Dialog (nur regelkonforme Optionen, Läufer-Out), Undo, „Neues Spiel", Regelprofile baseball9/baseball7/softball7.
 - Scoreboard-Overlay (oben links, 1920×1080), ein Pitchcount (nur Feldteam).
 - Kader-Datenbank (Teams, Spieler) mit Seite `/kader/`, Access-Import der alten Daten inkl. Statistik (wiederholbar).
-- Spielerkarten Batter/Pitcher (`/overlay/players.html`), Aufstellung (`/overlay/lineup.html`).
+- Zweites Scoreboard-Design „tafel" (Vorlage des Nutzers aus dem alten Tool), Spielerkarten Batter/Pitcher (`/overlay/players.html`), Aufstellung (`/overlay/lineup.html`).
 - Bedienung im hellen Design, Windows-Start per `start-seamcast.bat`. Der Nutzer testet in OBS (läuft).
 
 ## Themen und Backlog (Details stehen im jeweiligen GitHub-Issue)
@@ -51,6 +51,9 @@ Neue Aufgabe zu SeamCast: erst hier das passende Thema suchen, dann `gh api repo
 | 11 | Eigene Mannschaft markieren, Mehrmandanten | idea | Heideköpfe (Heidenheim) als „eigene Mannschaft" markieren (Nutzer hat das in Kader noch nicht getan). Mehrere Vereine über Profile/Konfiguration. |
 | 12 | Softball-Besonderheiten | idea | Profil softball7 existiert; weitere Regeln und Anzeigen prüfen. |
 | 13 | Installer / Start ohne Node-Kenntnisse | idea | Nutzer ist Laie; Windows. Heute: Node 22.13+ und pnpm nötig. Hinweis: pnpm 11 hat `minimumReleaseAge`, Lockfile mit pnpm 11 erzeugt. |
+| 16 | Design-Wahl in der Bedienung | fertig | Unter „Spiel → Design" wählbar, Server speichert (`profile`), Overlays folgen, `?profile=` pinnt. Designs = JSON in `config/profiles/` (`design`: `modern`/`tafel`). Offen: Karten/Aufstellung ohne eigenes tafel-Layout. |
+| 19 | Design-Import/-Export (Profil-Datei) | idea | Nutzer: „erstmal muss die App laufen" – nicht vorziehen. |
+| 20 | Design-Pakete (ZIP mit Layout, Logos, Schriften) | idea | Setzt #19 voraus; importierter Code muss abgesichert werden. |
 | 14 | Lizenz und Markenprüfung | idea | Name „SeamCast", Produkt soll vermarktbar sein. Lizenz und Markenrecherche offen. |
 
 Weitere Ideen (noch ohne Issue): Aufstellung automatisch mit aktuellem Schlagmann koppeln, Spielerfotos, Ergebnis-/Inning-Tabelle als Grafik, Tastaturkürzel erweitern.
