@@ -98,21 +98,13 @@
     }
   },
   "scoreboard": {
-    "design": "tafel",
+    "design": "bild",
     "colors": {
-      "panel": "#0b0b0b",
-      "panelText": "#ffffff",
       "accent": "#f2b01e",
-      "muted": "#8fa3bf",
-      "scoreBg": "#ffffff",
-      "scoreText": "#111111",
       "baseOn": "#f2b01e",
       "baseOff": "#ffffff",
-      "frame": "#d8d8d8",
-      "glossTop": "#3c3c3c",
       "field": "#2f6a2a"
     },
-    "radius": 6,
     "labels": {
       "top": "TOP",
       "bottom": "BOT",
@@ -125,9 +117,95 @@
       "count": true,
       "outs": true
     },
-    "layout": {
-      "position": "top-left",
-      "margin": 40
+    "bild": {
+      "image": "scoreboard-hdh.jpg",
+      "x": 66,
+      "y": 40,
+      "width": 596,
+      "height": 115,
+      "font": {
+        "family": "Arial, 'Helvetica Neue', sans-serif"
+      },
+      "bases": {
+        "x": 288,
+        "y": 42,
+        "width": 143,
+        "height": 110
+      },
+      "fields": {
+        "away": {
+          "x": 75,
+          "y": 48,
+          "width": 97,
+          "height": 43,
+          "size": 40,
+          "color": "#ffffff",
+          "align": "left"
+        },
+        "awayScore": {
+          "x": 228,
+          "y": 49,
+          "width": 59,
+          "height": 43,
+          "size": 40,
+          "color": "#000000",
+          "align": "center"
+        },
+        "home": {
+          "x": 75,
+          "y": 104,
+          "width": 97,
+          "height": 43,
+          "size": 40,
+          "color": "#ffffff",
+          "align": "left"
+        },
+        "homeScore": {
+          "x": 228,
+          "y": 104,
+          "width": 59,
+          "height": 43,
+          "size": 40,
+          "color": "#000000",
+          "align": "center"
+        },
+        "inning": {
+          "x": 436,
+          "y": 53,
+          "width": 115,
+          "height": 32,
+          "size": 33,
+          "color": "#ffffff",
+          "align": "center"
+        },
+        "pitch": {
+          "x": 563,
+          "y": 53,
+          "width": 88,
+          "height": 32,
+          "size": 33,
+          "color": "#ffffff",
+          "align": "center"
+        },
+        "count": {
+          "x": 447,
+          "y": 104,
+          "width": 91,
+          "height": 43,
+          "size": 40,
+          "color": "#ffffff",
+          "align": "center"
+        },
+        "out": {
+          "x": 559,
+          "y": 109,
+          "width": 97,
+          "height": 32,
+          "size": 33,
+          "color": "#ffffff",
+          "align": "center"
+        }
+      }
     }
   }
 }

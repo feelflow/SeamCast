@@ -18,8 +18,8 @@ describe('Grafikprofile', () => {
         cards?: Record<string, { layout?: string; logo?: string; position?: string }>;
       };
       expect(profile.colors).toBeTypeOf('object');
-      expect([undefined, 'modern', 'tafel']).toContain(profile.design);
-      expect([undefined, 'modern', 'tafel']).toContain(profile.scoreboard?.design);
+      expect([undefined, 'modern', 'tafel', 'bild']).toContain(profile.design);
+      expect([undefined, 'modern', 'tafel', 'bild']).toContain(profile.scoreboard?.design);
       for (const kind of ['batter', 'pitcher']) {
         expect([undefined, 'row', 'table', 'wide']).toContain(profile.cards?.[kind]?.layout);
         expect([undefined, 'top-left', 'top-right', 'bottom-left', 'bottom-right']).toContain(profile.cards?.[kind]?.position);
@@ -27,13 +27,20 @@ describe('Grafikprofile', () => {
     }
   });
 
-  it('Layout HDH zeigt das Scoreboard als Anzeigetafel, ohne die Karten zu verändern', async () => {
+  it('Layout HDH zeigt das Scoreboard nach der Bildvorlage, ohne die Karten zu verändern', async () => {
     const hdh = JSON.parse(await readFile(path.join(dir, 'hdh.json'), 'utf8')) as {
       design?: string;
-      scoreboard?: { design?: string; labels?: { top?: string } };
+      scoreboard?: { design?: string; labels?: { top?: string }; bild?: { image?: string; fields?: Record<string, { x?: number; y?: number; width?: number; height?: number }> } };
       cards?: { batter?: { layout?: string }; pitcher?: { layout?: string } };
     };
-    expect(hdh.scoreboard?.design).toBe('tafel');
+    expect(hdh.scoreboard?.design).toBe('bild');
+    const fields = hdh.scoreboard?.bild?.fields ?? {};
+    for (const key of ['away', 'awayScore', 'home', 'homeScore', 'inning', 'pitch', 'count', 'out']) {
+      expect(fields[key]?.x).toBeTypeOf('number');
+      expect(fields[key]?.y).toBeTypeOf('number');
+      expect(fields[key]?.width).toBeGreaterThan(0);
+      expect(fields[key]?.height).toBeGreaterThan(0);
+    }
     expect(hdh.scoreboard?.labels?.top).toBe('TOP');
     expect(hdh.design).toBeUndefined();
     expect(hdh.cards?.batter?.layout).toBe('wide');
@@ -45,7 +52,10 @@ describe('Grafikprofile', () => {
     for (const file of (await readdir(dir)).filter((f) => f.endsWith('.json'))) {
       const profile = JSON.parse(await readFile(path.join(dir, file), 'utf8')) as {
         cards?: Record<string, { logo?: string }>;
+        scoreboard?: { bild?: { image?: string } };
       };
+      const back = profile.scoreboard?.bild?.image;
+      if (back) expect(await readFile(path.join(assets, back))).toBeInstanceOf(Buffer);
       for (const kind of ['batter', 'pitcher']) {
         const logo = profile.cards?.[kind]?.logo;
         if (logo) expect(await readFile(path.join(assets, logo))).toBeInstanceOf(Buffer);

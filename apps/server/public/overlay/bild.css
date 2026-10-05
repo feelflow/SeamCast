@@ -1,0 +1,45 @@
+/* Design "bild": Scoreboard nach Bildvorlage (Profil: "design": "bild", Maße im Abschnitt "bild").
+   Alle Maße gelten für die Bühne 1920×1080 und stehen im Profil, nicht hier. */
+#bild { display: none; }
+body[data-design='bild'] #scoreboard,
+body[data-design='bild'] #tafel { display: none; }
+body[data-design='bild'] #bild {
+  display: block;
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1920px;
+  height: 1080px;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+body[data-design='bild'][data-graphic='off'] #bild { opacity: 0; transform: translateY(12px); }
+body[data-design='bild']:not([data-live='true']) #bild { opacity: 0; }
+body[data-design='bild'][data-role='preview'][data-onair='false'] #bild { opacity: 0.25; }
+
+#bild .b-back { position: absolute; display: block; }
+#bild .b-back[hidden] { display: none; }
+#bild .b-field {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  overflow: hidden;
+  font-family: var(--font);
+  font-weight: 700;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+#bild .b-field[hidden] { display: none; }
+#bild .b-field > span { display: block; transform-origin: left center; }
+#bild .b-field[data-align='center'] { justify-content: center; }
+#bild .b-field[data-align='center'] > span { transform-origin: center; }
+#bild .b-field[data-align='right'] { justify-content: flex-end; }
+#bild .b-field[data-align='right'] > span { transform-origin: right center; }
+#bild .b-field[data-batting='true'] { color: var(--accent) !important; }
+
+#bild .b-bases { position: absolute; overflow: visible; }
+#bild .b-bases[hidden] { display: none; }
+#bild .b-base { fill: var(--base-off); stroke: #222; stroke-width: 1.5; transform-box: fill-box; transform-origin: center; transform: rotate(45deg) scale(0.62); }
+#bild .b-base.on { fill: var(--base-on); }
+#bild .b-grass { fill: var(--bild-field, #2f6a2a); stroke: #fff; stroke-width: 1.5; }
+#bild .b-mound { fill: #c9a26b; }
