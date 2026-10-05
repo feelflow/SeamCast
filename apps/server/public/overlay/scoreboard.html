@@ -51,12 +51,18 @@
   </div>
   <div id="bild" aria-hidden="true">
     <img class="b-back" id="b-back" alt="">
-    <svg class="b-bases" id="b-bases" viewBox="0 0 60 60">
-      <polygon class="b-grass" points="30,6 54,30 30,54 6,30"/>
-      <circle class="b-mound" cx="30" cy="31" r="4"/>
-      <rect class="b-base" id="b-base-2" x="24.5" y="0.5" width="11" height="11"/>
-      <rect class="b-base" id="b-base-3" x="0.5" y="24.5" width="11" height="11"/>
-      <rect class="b-base" id="b-base-1" x="48.5" y="24.5" width="11" height="11"/>
+    <svg class="b-bases" id="b-bases" viewBox="0 0 143 110">
+      <defs>
+        <radialGradient id="b-grass-grad" cx="50%" cy="50%" r="50%">
+          <stop offset="0" stop-color="#b3a577"/>
+          <stop offset="0.35" stop-color="#5d7a3c"/>
+          <stop offset="1" stop-color="var(--bild-field, #2f6a2a)"/>
+        </radialGradient>
+      </defs>
+      <polygon class="b-grass" points="72,20 114,57 72,94 30,57"/>
+      <rect class="b-base" id="b-base-2" x="58" y="6" width="28" height="28" transform="rotate(45 72 20)"/>
+      <rect class="b-base" id="b-base-3" x="16" y="43" width="28" height="28" transform="rotate(45 30 57)"/>
+      <rect class="b-base" id="b-base-1" x="100" y="43" width="28" height="28" transform="rotate(45 114 57)"/>
     </svg>
     <div class="b-field" id="b-away"><span></span></div>
     <div class="b-field" id="b-awayScore"><span></span></div>

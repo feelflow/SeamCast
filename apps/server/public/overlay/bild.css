@@ -39,7 +39,6 @@ body[data-design='bild'][data-role='preview'][data-onair='false'] #bild { opacit
 
 #bild .b-bases { position: absolute; overflow: visible; }
 #bild .b-bases[hidden] { display: none; }
-#bild .b-base { fill: var(--base-off); stroke: #222; stroke-width: 1.5; transform-box: fill-box; transform-origin: center; transform: rotate(45deg) scale(0.62); }
+#bild .b-base { fill: var(--base-off); stroke: #222; stroke-width: 1.5; }
 #bild .b-base.on { fill: var(--base-on); }
-#bild .b-grass { fill: var(--bild-field, #2f6a2a); stroke: #fff; stroke-width: 1.5; }
-#bild .b-mound { fill: #c9a26b; }
+#bild .b-grass { fill: url(#b-grass-grad); stroke: #fff; stroke-width: 2.5; stroke-linejoin: miter; }
