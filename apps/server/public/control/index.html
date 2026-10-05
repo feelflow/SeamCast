@@ -40,6 +40,9 @@
             <button data-action='{"type":"out"}'><kbd>O</kbd> Out</button>
             <button data-action='{"type":"hitByPitch"}'>Getroffen (HBP)</button>
             <button data-action='{"type":"newBatter"}'><kbd>N</kbd> Neuer Batter</button>
+            <button data-action='{"type":"intentionalWalk"}' title="Absichtlicher Walk, kein Pitch gezählt">Absichtl. Walk</button>
+            <button data-action='{"type":"balk"}' title="Alle Läufer eine Base weiter">Balk</button>
+            <button id="out-runners" title="Schlagmann aus, Läufer rücken vor oder sind aus (Sac Fly, Doppelspiel)">Out + Läufer</button>
           </div>
         </section>
 
@@ -68,6 +71,10 @@
             <button class="toggle" id="base-btn-0">1B</button>
             <button class="toggle" id="base-btn-1">2B</button>
             <button class="toggle" id="base-btn-2">3B</button>
+          </div>
+          <h2 class="sub">Läufer bewegen</h2>
+          <div class="grid">
+            <button id="advance-runners" title="Steal, Wild Pitch, Passed Ball, Caught Stealing">Läufer rücken vor</button>
           </div>
           <h2 class="sub">Läufer ist aus</h2>
           <div class="grid">

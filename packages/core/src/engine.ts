@@ -12,8 +12,20 @@ export type Action =
   | { type: 'strike' }
   /** Foul: zählt als Strike, aber nie als letzter Strike */
   | { type: 'foul' }
-  /** Schlagmann ist nach einem Treffer ins Feld aus (kein Strikeout) */
-  | { type: 'out' }
+  /**
+   * Schlagmann ist ins Feld aus (kein Strikeout). Mit `runners` (wie bei `hit`) rücken die
+   * Läufer gleichzeitig vor oder sind aus, etwa bei Sacrifice Fly oder Doppelspiel.
+   */
+  | { type: 'out'; runners?: readonly [number, number, number] }
+  /** Absichtlicher Walk: Schlagmann geht auf 1B, es wird kein Pitch gezählt */
+  | { type: 'intentionalWalk' }
+  /** Balk: alle Läufer rücken eine Base vor, Count und Pitchcount bleiben */
+  | { type: 'balk' }
+  /**
+   * Läufer rücken ohne Schlagmann vor (Steal, Wild Pitch, Passed Ball, Fehler beim Pickoff).
+   * Bedeutung der Werte wie bei `hit.runners`; -1 = Läufer ist aus (etwa Caught Stealing).
+   */
+  | { type: 'advance'; runners: readonly [number, number, number] }
   /**
    * Treffer über 1 bis 4 Bases (4 = Homerun). Ohne `runners` rücken alle Läufer
    * um so viele Bases vor wie der Schlagmann. Mit `runners` bestimmt der Bediener,
@@ -100,18 +112,19 @@ function walk(state: GameState): GameState {
   return addRuns(resetCount({ ...state, bases }), runs);
 }
 
-/** Treffer: Alle Läufer und der Schlagmann rücken um `advance` Bases vor. */
-function hit(
-  state: GameState,
-  advance: number,
-  runners?: readonly [number, number, number],
-): GameState {
+/**
+ * Spielzug mit Läufern. `batter`: Base des Schlagmanns (1 bis 4), 0 = Schlagmann ist aus,
+ * null = kein Schlagmann beteiligt (Count bleibt). `moves(index)`: wie weit der Läufer
+ * von Base index+1 kommt (0 = bleibt, 4 oder mehr = Run, -1 = aus). Fällt dabei das
+ * letzte Out, zählen die Runs dieses Spielzugs nicht.
+ */
+function play(state: GameState, batter: number | null, moves: (index: number) => number): GameState {
   const next: [boolean, boolean, boolean] = [false, false, false];
   let runs = 0;
   let outs = 0;
   state.bases.forEach((occupied, index) => {
     if (!occupied) return;
-    const moved = runners ? (runners[index] ?? 0) : advance;
+    const moved = moves(index);
     if (moved < 0) {
       outs += 1;
       return;
@@ -120,9 +133,13 @@ function hit(
     if (target >= 4) runs += 1;
     else next[target - 1] = true;
   });
-  if (advance >= 4) runs += 1;
-  else next[advance - 1] = true;
-  const settled = resetCount({ ...state, bases: next });
+  if (batter === 0) outs += 1;
+  else if (batter !== null) {
+    if (batter >= 4) runs += 1;
+    else next[batter - 1] = true;
+  }
+  const moved: GameState = { ...state, bases: next };
+  const settled = batter === null ? moved : resetCount(moved);
   if (outs === 0) return addRuns(settled, runs);
   const withOuts: GameState = { ...settled, outs: state.outs + outs };
   return withOuts.outs >= state.rules.outsPerHalfInning ? endHalf(withOuts) : addRuns(withOuts, runs);
@@ -144,10 +161,23 @@ function reduceCore(state: GameState, action: Action): GameState {
         ? { ...next, strikes: state.strikes + 1 }
         : next;
     }
-    case 'out':
-      return addOut(addPitch(state));
-    case 'hit':
-      return hit(addPitch(state), action.bases, action.runners);
+    case 'out': {
+      const runners = action.runners;
+      return runners ? play(addPitch(state), 0, (i) => runners[i] ?? 0) : addOut(addPitch(state));
+    }
+    case 'intentionalWalk':
+      return walk(state);
+    case 'balk':
+      return state.bases.some(Boolean) ? play(state, null, () => 1) : state;
+    case 'advance': {
+      const runners = action.runners;
+      const moves = state.bases.some((on, i) => on && (runners[i] ?? 0) !== 0);
+      return moves ? play(state, null, (i) => runners[i] ?? 0) : state;
+    }
+    case 'hit': {
+      const runners = action.runners;
+      return play(addPitch(state), action.bases, (i) => (runners ? (runners[i] ?? 0) : action.bases));
+    }
     case 'runnerOut': {
       if (!state.bases[action.base - 1]) return state;
       const bases: [boolean, boolean, boolean] = [state.bases[0], state.bases[1], state.bases[2]];
@@ -226,6 +256,7 @@ function endsPlateAppearance(state: GameState, action: Action): boolean {
     case 'out':
     case 'hit':
     case 'hitByPitch':
+    case 'intentionalWalk':
     case 'newBatter':
       return true;
     default:

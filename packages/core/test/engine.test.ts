@@ -316,3 +316,79 @@ describe('Schlagreihenfolge (batterIndex)', () => {
     expect(index(run([{ type: 'newGame' }], set))).toEqual({ away: 0, home: 0 });
   });
 });
+
+describe('Weitere Spielzüge', () => {
+  const bases = (b: [boolean, boolean, boolean]): Action => ({ type: 'setBases', bases: b });
+
+  it('absichtlicher Walk: Schlagmann auf 1B, kein Pitch, nächster Schlagmann', () => {
+    const state = run([{ type: 'intentionalWalk' }]);
+    expect(state.bases).toEqual([true, false, false]);
+    expect(state.pitches).toEqual({ away: 0, home: 0 });
+    expect(state.batterIndex.away).toBe(1);
+  });
+
+  it('absichtlicher Walk bei voller Besetzung bringt einen Run', () => {
+    const state = run([bases([true, true, true]), { type: 'intentionalWalk' }]);
+    expect(state.score.away).toBe(1);
+  });
+
+  it('Balk: alle Läufer eine Base weiter, Run von 3B, Count und Pitches bleiben', () => {
+    const state = run([{ type: 'ball' }, bases([true, false, true]), { type: 'balk' }]);
+    expect(state.bases).toEqual([false, true, false]);
+    expect(state.score.away).toBe(1);
+    expect(state).toMatchObject({ balls: 1, strikes: 0 });
+    expect(state.pitches.home).toBe(1);
+  });
+
+  it('Balk ohne Läufer ändert nichts', () => {
+    const start = createGame();
+    expect(reduce(start, { type: 'balk' })).toBe(start);
+  });
+
+  it('Stolen Base: Läufer von 1B auf 2B, Schlagmann bleibt dran', () => {
+    const state = run([{ type: 'strike' }, bases([true, false, false]), { type: 'advance', runners: [1, 0, 0] }]);
+    expect(state.bases).toEqual([false, true, false]);
+    expect(state.strikes).toBe(1);
+    expect(state.batterIndex.away).toBe(0);
+  });
+
+  it('Caught Stealing: Läufer aus, Out zählt, dritte Out beendet den Halbinning', () => {
+    const one = run([bases([true, false, false]), { type: 'advance', runners: [-1, 0, 0] }]);
+    expect(one.outs).toBe(1);
+    expect(one.bases).toEqual([false, false, false]);
+    const end = run([{ type: 'adjustOuts', delta: 1 }, { type: 'adjustOuts', delta: 1 }, bases([false, true, false]), { type: 'advance', runners: [0, -1, 0] }]);
+    expect(end).toMatchObject({ half: 'bottom', outs: 0 });
+  });
+
+  it('Advance ohne Bewegung ändert nichts (Wild Pitch ohne Läufer)', () => {
+    const start = run([bases([true, false, false])]);
+    expect(reduce(start, { type: 'advance', runners: [0, 0, 0] })).toBe(start);
+  });
+
+  it('Sacrifice Fly: Schlagmann aus, Läufer von 3B scort, Schlagmann zählt weiter', () => {
+    const state = run([bases([false, false, true]), { type: 'out', runners: [0, 0, 1] }]);
+    expect(state.outs).toBe(1);
+    expect(state.score.away).toBe(1);
+    expect(state.bases).toEqual([false, false, false]);
+    expect(state.batterIndex.away).toBe(1);
+    expect(state.pitches.home).toBe(1);
+  });
+
+  it('Doppelspiel: Schlagmann und Läufer aus, zwei Outs', () => {
+    const state = run([bases([true, false, false]), { type: 'out', runners: [-1, 0, 0] }]);
+    expect(state.outs).toBe(2);
+    expect(state.bases).toEqual([false, false, false]);
+  });
+
+  it('Doppelspiel mit dem dritten Out: Runs des Spielzugs zählen nicht', () => {
+    const state = run([{ type: 'adjustOuts', delta: 1 }, bases([true, false, true]), { type: 'out', runners: [-1, 0, 1] }]);
+    expect(state).toMatchObject({ half: 'bottom', outs: 0 });
+    expect(state.score.away).toBe(0);
+  });
+
+  it('Out ohne Läuferangabe verhält sich wie bisher', () => {
+    const state = run([bases([true, false, false]), { type: 'out' }]);
+    expect(state.outs).toBe(1);
+    expect(state.bases).toEqual([true, false, false]);
+  });
+});

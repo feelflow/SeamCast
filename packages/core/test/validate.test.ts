@@ -60,3 +60,20 @@ describe('setBatterIndex und alter Spielstand', () => {
     expect(parseGameState({ ...old, batterIndex: { away: -1, home: 0 } })).toBeNull();
   });
 });
+
+describe('Neue Spielzüge', () => {
+  it('nimmt gültige Eingaben an', () => {
+    expect(parseAction({ type: 'intentionalWalk' })).toEqual({ type: 'intentionalWalk' });
+    expect(parseAction({ type: 'balk' })).toEqual({ type: 'balk' });
+    expect(parseAction({ type: 'out' })).toEqual({ type: 'out' });
+    expect(parseAction({ type: 'out', runners: [-1, 0, 1] })).toEqual({ type: 'out', runners: [-1, 0, 1] });
+    expect(parseAction({ type: 'advance', runners: [1, 0, 0] })).toEqual({ type: 'advance', runners: [1, 0, 0] });
+  });
+
+  it('lehnt ungültige Läuferangaben ab', () => {
+    expect(parseAction({ type: 'advance' })).toBeNull();
+    expect(parseAction({ type: 'advance', runners: [1, 0] })).toBeNull();
+    expect(parseAction({ type: 'advance', runners: [9, 0, 0] })).toBeNull();
+    expect(parseAction({ type: 'out', runners: 'x' })).toBeNull();
+  });
+});

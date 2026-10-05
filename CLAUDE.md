@@ -56,6 +56,7 @@ Neue Aufgabe zu SeamCast: erst hier das passende Thema suchen, dann `gh api repo
 | 16 | Design-Wahl in der Bedienung | fertig | Unter „Spiel → Design" wählbar, Server speichert (`profile`), Overlays folgen, `?profile=` pinnt. Designs = JSON in `config/profiles/` (`design`: `modern`/`tafel`/`bild`, auch im Abschnitt `scoreboard`). Seit #27 je Grafik wählbar unter `/config/`; Layouts aufgeräumt: nur `default` und `hdh`. |
 | 19 | Design-Import/-Export (Profil-Datei) | idea | Nutzer: „erstmal muss die App laufen" – nicht vorziehen. |
 | 20 | Design-Pakete (ZIP mit Layout, Logos, Schriften) | idea | Setzt #19 voraus; importierter Code muss abgesichert werden. |
+| 37 | Weitere Spielzüge und Spielende | idea | Offen: Dropped Third Strike, Final/Mercy Rule, Extra Innings (Softball-Tiebreaker), Interference. Schon da: Absichtl. Walk, Balk, Läufer rücken vor (Steal/WP/PB/Caught Stealing), Out + Läufer (Sac Fly, Doppelspiel). |
 | 14 | Lizenz und Markenprüfung | idea | Name „SeamCast", Produkt soll vermarktbar sein. Lizenz und Markenrecherche offen. |
 
 | 22 | Anzeige der Spieler | fertig | Layout HDH für Pitcher- und Batter-Karte. Die Position (z. B. „3B“) kommt aus der Aufstellung des Spiels (`pos` je Slot), nicht aus dem Kader; steht der Spieler in keiner Aufstellung, bleibt die Zeile leer. Vereinslogo: Datei in `config/assets/`, Dateiname beim Team im Kader eintragen. Karten werden nie gleichzeitig gezeigt. Neue Vorlagen immer so lesen: Loopic-HTML parsen, Maße/Zeiten/Bilder extrahieren, als Layout nachbauen. |
