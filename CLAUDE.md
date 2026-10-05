@@ -62,6 +62,8 @@ Neue Aufgabe zu SeamCast: erst hier das passende Thema suchen, dann `gh api repo
 
 Spielerkarten automatisch (Issue #31): Schlagmann = Aufstellung der schlagenden Mannschaft, Platz `game.batterIndex[Seite]`, rückt bei Out/Hit/Walk/Strikeout/HBP/„Neuer Batter“ weiter (Rückgängig stellt her); Pitcher = Slot `P` der Feldmannschaft, Wechsel per `pitcher`-Befehl (Pitchcount auf 0). Ohne Aufstellung bleibt die Handauswahl (`select`).
 
+Aufstellung von Layout HDH (Issue #33): Design „feld“ nach der Loopic-Vorlage „2023_Lineup“ – Vollbild 1920×1080 mit Stadionfoto (`config/assets/lineup-hdh.jpg`), Namensschild je Feldposition (`lineup-plate-hdh.png`), Maße/Reihenfolge im Profilabschnitt `lineup.feld`, Schilder erscheinen nacheinander (`stepMs`). Pro Position zählt der erste Eintrag; `EH` steht am DH-Platz; ohne Position erscheint der Spieler nicht. Es ist immer nur eine Mannschaft zu sehen (Gast, sonst Heim). Andere Profile behalten die Listen-Aufstellung.
+
 Weitere Ideen (noch ohne Issue): Aufstellung automatisch mit aktuellem Schlagmann koppeln, Spielerfotos, Ergebnis-/Inning-Tabelle als Grafik, Tastaturkürzel erweitern, Bedienung am Handy (Layout für schmale Bildschirme, große Tasten; aus #6 ausgegliedert, nicht eilig; hängt mit #9 Zugriffsschutz zusammen).
 
 ## Nutzer

@@ -207,5 +207,98 @@
         }
       }
     }
+  },
+  "lineup": {
+    "design": "feld",
+    "feld": {
+      "font": {
+        "family": "'Trebuchet MS', 'Segoe UI', Arial, sans-serif"
+      },
+      "back": {
+        "image": "lineup-hdh.jpg",
+        "x": -1,
+        "y": 0,
+        "width": 1922,
+        "height": 1082
+      },
+      "plate": {
+        "image": "lineup-plate-hdh.png",
+        "width": 343,
+        "height": 77,
+        "posWidth": 103,
+        "posSize": 50,
+        "posY": 7,
+        "nameX": 121,
+        "firstY": 12,
+        "lastY": 39,
+        "nameSize": 22,
+        "color": "#ffffff"
+      },
+      "title": {
+        "centerX": 969,
+        "label": "LINEUP",
+        "labelY": 99,
+        "labelSize": 40,
+        "teamY": 155,
+        "teamSize": 50,
+        "uppercase": true
+      },
+      "stepMs": 60,
+      "order": [
+        "P",
+        "C",
+        "1B",
+        "2B",
+        "SS",
+        "3B",
+        "LF",
+        "CF",
+        "RF",
+        "DH"
+      ],
+      "positions": {
+        "P": {
+          "x": 789,
+          "y": 758
+        },
+        "C": {
+          "x": 789,
+          "y": 876
+        },
+        "1B": {
+          "x": 1318,
+          "y": 665
+        },
+        "2B": {
+          "x": 1016,
+          "y": 518
+        },
+        "SS": {
+          "x": 587,
+          "y": 518
+        },
+        "3B": {
+          "x": 318,
+          "y": 665
+        },
+        "LF": {
+          "x": 184,
+          "y": 400
+        },
+        "CF": {
+          "x": 792,
+          "y": 298
+        },
+        "RF": {
+          "x": 1411,
+          "y": 400
+        },
+        "DH": {
+          "x": 1317,
+          "y": 877,
+          "plate": false
+        }
+      }
+    }
   }
 }

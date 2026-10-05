@@ -53,13 +53,39 @@ describe('Grafikprofile', () => {
       const profile = JSON.parse(await readFile(path.join(dir, file), 'utf8')) as {
         cards?: Record<string, { logo?: string }>;
         scoreboard?: { bild?: { image?: string } };
+        lineup?: { feld?: { back?: { image?: string }; plate?: { image?: string } } };
       };
       const back = profile.scoreboard?.bild?.image;
       if (back) expect(await readFile(path.join(assets, back))).toBeInstanceOf(Buffer);
+      for (const image of [profile.lineup?.feld?.back?.image, profile.lineup?.feld?.plate?.image]) {
+        if (image) expect(await readFile(path.join(assets, image))).toBeInstanceOf(Buffer);
+      }
       for (const kind of ['batter', 'pitcher']) {
         const logo = profile.cards?.[kind]?.logo;
         if (logo) expect(await readFile(path.join(assets, logo))).toBeInstanceOf(Buffer);
       }
     }
+  });
+
+  it('Layout HDH zeigt die Aufstellung nach Feldpositionen, alle zehn Plätze mit Maßen', async () => {
+    const hdh = JSON.parse(await readFile(path.join(dir, 'hdh.json'), 'utf8')) as {
+      lineup?: { design?: string; feld?: { order?: string[]; positions?: Record<string, { x?: number; y?: number }>; plate?: { width?: number; height?: number } } };
+    };
+    expect(hdh.lineup?.design).toBe('feld');
+    const feld = hdh.lineup?.feld;
+    const keys = ['P', 'C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'DH'];
+    expect(Object.keys(feld?.positions ?? {}).sort()).toEqual([...keys].sort());
+    expect([...(feld?.order ?? [])].sort()).toEqual([...keys].sort());
+    for (const key of keys) {
+      expect(feld?.positions?.[key]?.x).toBeTypeOf('number');
+      expect(feld?.positions?.[key]?.y).toBeTypeOf('number');
+    }
+    expect(feld?.plate?.width).toBeGreaterThan(0);
+    expect(feld?.plate?.height).toBeGreaterThan(0);
+  });
+
+  it('Standardprofil hat keine Feld-Aufstellung (bleibt bei der Liste)', async () => {
+    const def = JSON.parse(await readFile(path.join(dir, 'default.json'), 'utf8')) as { lineup?: unknown };
+    expect(def.lineup).toBeUndefined();
   });
 });
