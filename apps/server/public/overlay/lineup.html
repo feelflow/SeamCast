@@ -7,11 +7,18 @@
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="overlay.css">
   <link rel="stylesheet" href="lineup.css">
+  <link rel="stylesheet" href="feld.css">
 </head>
 <body data-live="false">
   <div id="lineups">
     <section class="lineup" id="lineup-away" data-show="false"><h2 id="title-away"></h2><ol id="list-away"></ol></section>
     <section class="lineup" id="lineup-home" data-show="false"><h2 id="title-home"></h2><ol id="list-home"></ol></section>
+  </div>
+  <div id="feld" data-show="false">
+    <img id="f-back" alt="" hidden>
+    <div id="f-label" class="f-title"></div>
+    <div id="f-team" class="f-title"></div>
+    <div id="f-items"></div>
   </div>
   <script src="lineup.js"></script>
 </body>
