@@ -34,6 +34,10 @@ function applyProfile(p) {
   if (p.font && typeof p.font.family === 'string') root.setProperty('--font', p.font.family);
   if (p.font && typeof p.font.scale === 'number') root.setProperty('--scale', String(p.font.scale));
   if (typeof p.radius === 'number') root.setProperty('--radius', `${p.radius}px`);
+  body.dataset.design = p.design === 'tafel' ? 'tafel' : 'modern';
+  if (typeof c.frame === 'string') root.setProperty('--tafel-frame', c.frame);
+  if (typeof c.glossTop === 'string') root.setProperty('--tafel-top', c.glossTop);
+  if (typeof c.field === 'string') root.setProperty('--tafel-field', c.field);
   const layout = p.layout ?? {};
   if (typeof layout.margin === 'number') root.setProperty('--margin', `${layout.margin}px`);
   if (typeof layout.position === 'string') body.dataset.position = layout.position;
@@ -74,8 +78,24 @@ function render(msg) {
   dots('outs', g.outs, g.rules.outsPerHalfInning - 1);
   const fielding = g.half === 'top' ? 'home' : 'away';
   $('pitch-count').textContent = String(g.pitches[fielding]);
+  renderTafel(g);
   body.dataset.graphic = msg.graphics?.scoreboard ? 'on' : 'off';
   body.dataset.onair = msg.graphics?.scoreboard ? 'true' : 'false';
+}
+
+function renderTafel(g) {
+  const fielding = g.half === 'top' ? 'home' : 'away';
+  $('t-name-away').textContent = g.teams.away.short;
+  $('t-name-home').textContent = g.teams.home.short;
+  $('t-name-away').dataset.batting = String(g.half === 'top');
+  $('t-name-home').dataset.batting = String(g.half === 'bottom');
+  $('t-score-away').textContent = String(g.score.away);
+  $('t-score-home').textContent = String(g.score.home);
+  $('t-inning').textContent = `${g.half === 'top' ? 'TOP' : 'BOT'} ${g.inning}`;
+  $('t-count').textContent = `${g.balls} - ${g.strikes}`;
+  $('t-out').textContent = `${g.outs} ${profile.labels.out}`;
+  $('t-pitch').textContent = `${profile.labels.pitch}:${g.pitches[fielding]}`;
+  g.bases.forEach((on, i) => $(`t-base-${i + 1}`).classList.toggle('on', Boolean(on)));
 }
 
 function armStale() {
