@@ -166,6 +166,16 @@ function setupBild() {
     el.dataset.align = ['left', 'center', 'right'].includes(f.align) ? f.align : 'left';
     if (typeof fonts.family === 'string') el.style.fontFamily = fonts.family;
   }
+  for (const side of ['away', 'home']) {
+    const l = (b.logos ?? {})[side];
+    const el = $(`b-logo-${side}`);
+    el.dataset.placed = String(Boolean(l));
+    if (!l) continue;
+    el.style.left = `${num(l.x, 0)}px`;
+    el.style.top = `${num(l.y, 0)}px`;
+    el.style.width = `${num(l.width, 40)}px`;
+    el.style.height = `${num(l.height, 40)}px`;
+  }
   $('b-pitch').hidden = profile.show.pitchCount === false;
   $('b-count').hidden = profile.show.count === false;
   $('b-out').hidden = profile.show.outs === false;
@@ -182,8 +192,18 @@ function setBildText(key, text) {
   if (avail > 0 && need > avail) span.style.transform = `scaleX(${avail / need})`;
 }
 
+/** Team-Logo aus dem Kader zeigen (nur wenn das Design dafür einen Platz vorsieht). */
+function setLogo(side, file) {
+  const el = $(`b-logo-${side}`);
+  const ok = el.dataset.placed === 'true' && typeof file === 'string' && /^[\w.-]{1,100}$/.test(file);
+  if (ok && el.getAttribute('src') !== `/assets/${file}`) el.src = `/assets/${file}`;
+  el.hidden = !ok;
+}
+
 function renderBild(g) {
   if (!profile.bild) return;
+  setLogo('away', latest?.teamLogos?.away);
+  setLogo('home', latest?.teamLogos?.home);
   const fielding = g.half === 'top' ? 'home' : 'away';
   setBildText('away', g.teams.away.short);
   setBildText('home', g.teams.home.short);

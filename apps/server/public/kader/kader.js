@@ -107,6 +107,29 @@ function resetTeamForm() {
 }
 
 $('team-cancel').addEventListener('click', resetTeamForm);
+
+// Logo hochladen: Datei wird gespeichert, der Dateiname landet im Feld „Logo-Datei“.
+$('logo-file').addEventListener('change', async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+  try {
+    if (file.size > 1024 * 1024) throw new Error('Das Logo ist zu groß (höchstens 1 MB).');
+    const name = file.name.replace(/[^A-Za-z0-9_.-]/g, '_').replace(/^[^A-Za-z0-9_]+/, '').slice(-60);
+    const res = await fetch(`/api/logos?name=${encodeURIComponent(name)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/octet-stream' },
+      body: await file.arrayBuffer(),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'Hochladen fehlgeschlagen');
+    teamForm.elements.logo.value = data.name;
+    status(`Logo „${data.name}“ hochgeladen – jetzt Speichern drücken.`);
+  } catch (error) {
+    fail(error);
+  } finally {
+    event.target.value = '';
+  }
+});
 teamForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   const body = {
