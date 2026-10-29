@@ -42,3 +42,5 @@ body[data-design='bild'][data-role='preview'][data-onair='false'] #bild { opacit
 #bild .b-base { fill: var(--base-off); stroke: #222; stroke-width: 1.5; }
 #bild .b-base.on { fill: var(--base-on); }
 #bild .b-grass { fill: url(#b-grass-grad); stroke: #fff; stroke-width: 2.5; stroke-linejoin: miter; }
+#bild .b-logo { position: absolute; display: block; object-fit: contain; }
+#bild .b-logo[hidden] { display: none; }

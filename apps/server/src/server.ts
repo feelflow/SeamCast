@@ -6,9 +6,9 @@ import { WebSocketServer, type WebSocket } from 'ws';
 import { ASSET_FILE_PATTERN, Game, PROFILE_ID_PATTERN, PROFILE_LIMITS, RULE_PROFILES, checkProfile, profileIdFromName, battingSide, detectEvent, fieldingSide, isGameEvent, parseAction, parsePlayerInput, parseTeamInput, type GameEvent, type Side } from '@seamcast/core';
 import { createRepo, openDatabase } from './db.js';
 import { buildLineup, currentBatterId, currentPitcherId, emptyLineups, parseSlots, readLineups, withPitcher, type Lineups } from './lineup.js';
-import { buildCard, emptyMatchup, readMatchup, type Matchup } from './cards.js';
+import { buildCard, emptyMatchup, readMatchup, teamLogos, type Matchup } from './cards.js';
 import { importFromAccess } from './importer.js';
-import { PACKAGE_LIMITS, buildDesignPackage, readDesignPackage, renameAssets } from './designPackage.js';
+import { PACKAGE_LIMITS, buildDesignPackage, checkImage, readDesignPackage, renameAssets } from './designPackage.js';
 import { statLines } from './statlines.js';
 import { createPersistence } from './persist.js';
 
@@ -230,6 +230,7 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
         pitcher: buildCard(repo, 'pitcher', now.pitcherId, lineups),
       },
       current: now,
+      teamLogos: teamLogos(repo, lineups, { away: game.state.teams.away.short, home: game.state.teams.home.short }),
       profile: profileId,
       layouts,
       animations,
@@ -381,6 +382,56 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
   async function removeUserAssets(id: string): Promise<void> {
     const files = await readdir(userAssetsDir).catch(() => [] as string[]);
     await Promise.all(files.filter((f) => f.startsWith(`${id}--`)).map((f) => unlink(path.join(userAssetsDir, f)).catch(() => undefined)));
+  }
+
+  /** Logo hochladen: POST /api/logos?name=<Datei> (Bild im Body, höchstens 1 MB). Landet im Datenordner. */
+  async function handleLogoUpload(
+    req: http.IncomingMessage,
+    res: http.ServerResponse,
+    pathname: string,
+    search: URLSearchParams,
+  ): Promise<boolean> {
+    if (pathname !== '/api/logos') return false;
+    if (req.method !== 'POST') {
+      json(res, 405, { error: 'Methode nicht erlaubt' });
+      return true;
+    }
+    if (!sameOrigin(req)) {
+      json(res, 403, { error: 'Fremde Herkunft' });
+      return true;
+    }
+    const name = search.get('name') ?? '';
+    if (!ASSET_FILE.test(name) || name.includes('--')) {
+      json(res, 400, { error: 'Ungültiger Dateiname (nur Buchstaben, Zahlen, _ . -).' });
+      return true;
+    }
+    const contentType = (req.headers['content-type'] ?? '').split(';')[0]!.trim().toLowerCase();
+    if (contentType !== 'application/octet-stream' && !contentType.startsWith('image/')) {
+      json(res, 415, { error: 'Bitte ein Bild senden.' });
+      return true;
+    }
+    let data: Buffer;
+    try {
+      data = await readBinary(req, 1024 * 1024);
+    } catch {
+      json(res, 413, { error: 'Das Logo ist zu groß (höchstens 1 MB).' });
+      return true;
+    }
+    const problem = checkImage(name, data);
+    if (problem) {
+      json(res, 400, { error: problem });
+      return true;
+    }
+    if (await readFile(path.join(assetsDir, name)).then(() => true, () => false)) {
+      json(res, 409, { error: `„${name}“ gehört zum Programm. Bitte die Datei umbenennen.` });
+      return true;
+    }
+    await mkdir(userAssetsDir, { recursive: true });
+    const target = path.join(userAssetsDir, name);
+    await writeFile(`${target}.tmp`, data);
+    await rename(`${target}.tmp`, target);
+    json(res, 201, { name });
+    return true;
   }
 
   /** Importierte Designs: POST /api/profiles, DELETE /api/profiles/<id>. Gespeichert im Datenordner, nie im Programmordner. */
@@ -540,6 +591,7 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
 
     if (method === 'DELETE') {
       const deleted = kind === 'teams' ? repo.deleteTeam(id as number) : repo.deletePlayer(id as number);
+      if (deleted) broadcast();
       json(res, deleted ? 200 : 404, deleted ? { ok: true } : { error: 'Nicht gefunden' });
       return true;
     }
@@ -557,8 +609,10 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
       badTeam: [400, 'Mannschaft existiert nicht'],
     } as const;
     const answer = (outcome: ReturnType<typeof repo.createPlayer> | ReturnType<typeof repo.updateTeam>) => {
-      if (outcome.ok) json(res, method === 'POST' ? 201 : 200, outcome.value);
-      else json(res, failures[outcome.reason][0], { error: failures[outcome.reason][1] });
+      if (outcome.ok) {
+        broadcast();
+        json(res, method === 'POST' ? 201 : 200, outcome.value);
+      } else json(res, failures[outcome.reason][0], { error: failures[outcome.reason][1] });
     };
 
     if (kind === 'teams') {
@@ -585,6 +639,7 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
       return send(res, 400, 'Ungültige Adresse', 'text/plain; charset=utf-8', head);
     }
     if (await handleData(req, res, pathname, search)) return;
+    if (await handleLogoUpload(req, res, pathname, search)) return;
     if (await handleProfiles(req, res, pathname, search)) return;
     if (await handleRoster(req, res, pathname, search)) return;
     if (req.method !== 'GET' && !head) {

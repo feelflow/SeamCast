@@ -78,3 +78,24 @@ export function buildCard(
     stats,
   };
 }
+
+/**
+ * Logo-Dateiname je Seite fürs Scoreboard: Mannschaft des ersten Spielers der Aufstellung,
+ * sonst Mannschaft mit gleichem Kürzel im Kader. Leer, wenn nichts passt.
+ */
+export function teamLogos(repo: Repo, lineups: Lineups, shorts: Record<Side, string>): Record<Side, string> {
+  const result: Record<Side, string> = { away: '', home: '' };
+  let teams: ReturnType<Repo['listTeams']> | null = null;
+  for (const side of ['away', 'home'] as const) {
+    const first = lineups[side][0];
+    const fromLineup = first ? repo.getTeam(repo.getPlayer(first.playerId)?.teamId ?? -1)?.logo : '';
+    if (fromLineup) {
+      result[side] = fromLineup;
+      continue;
+    }
+    teams ??= repo.listTeams();
+    const wanted = shorts[side].trim().toLowerCase();
+    result[side] = wanted ? (teams.find((t) => t.short.toLowerCase() === wanted)?.logo ?? '') : '';
+  }
+  return result;
+}
