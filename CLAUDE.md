@@ -16,7 +16,7 @@ Nachfolger des alten WinForms-Tools „Baseball-TV-Manager". Besitzer: Florian H
 
 ## Befehle
 - `pnpm install`, `pnpm start` (Port 8080), `pnpm typecheck`, `pnpm test` – vor jedem Commit müssen Typecheck und Tests grün sein.
-- Windows-Start für den Nutzer: `start-seamcast.bat` (wechselt selbst auf `main` und holt Updates; der Nutzer muss nichts manuell tun, solange keine eigenen Änderungen im Ordner liegen).
+- Windows-Start für den Nutzer: `start-seamcast.bat`; Mac: `start-seamcast.command` (bei Änderungen an einer der beiden Dateien die andere mitpflegen) (wechselt selbst auf `main` und holt Updates; der Nutzer muss nichts manuell tun, solange keine eigenen Änderungen im Ordner liegen).
 - Manuell prüfen: `SEAMCAST_PORT=8099 SEAMCAST_DATA=/tmp/x pnpm start`, beenden mit `fuser -k 8099/tcp` (nicht `pkill -f`, das killt die eigene Shell). Screenshots mit Playwright und `/opt/pw-browsers/chromium`.
 
 ## Regeln für Änderungen
@@ -58,6 +58,7 @@ Neue Aufgabe zu SeamCast: erst hier das passende Thema suchen, dann `gh api repo
 | 19 | Design-Import/-Export (Profil-Datei) | idea | Nutzer: „erstmal muss die App laufen" – nicht vorziehen. |
 | 20 | Design-Pakete (ZIP mit Layout, Logos, Schriften) | idea | Setzt #19 voraus; importierter Code muss abgesichert werden. |
 | 37 | Weitere Spielzüge und Spielende | idea | Offen: Dropped Third Strike, Final/Mercy Rule, Extra Innings (Softball-Tiebreaker), Interference. Schon da: Intentional Walk, Balk, Base Stealing (Steal/WP/PB/Caught Stealing), Out fragt bei Läufern nach dem Ziel (Sac Fly, Doppelspiel). |
+| 46 | Start auf dem Mac | fertig (ungetestet) | `start-seamcast.command` (Doppelklick, spiegelt die .bat), README-Abschnitt „Mac“. Auf echtem Mac noch nicht geprüft; vMix nur Windows. Teil von #13. |
 | 14 | Lizenz und Markenprüfung | idea | Name „SeamCast", Produkt soll vermarktbar sein. Lizenz und Markenrecherche offen. |
 
 | 22 | Anzeige der Spieler | fertig | Layout HDH für Pitcher- und Batter-Karte. Die Position (z. B. „3B“) kommt aus der Aufstellung des Spiels (`pos` je Slot), nicht aus dem Kader; steht der Spieler in keiner Aufstellung, bleibt die Zeile leer. Vereinslogo: Datei in `config/assets/`, Dateiname beim Team im Kader eintragen. Karten werden nie gleichzeitig gezeigt. Neue Vorlagen immer so lesen: Loopic-HTML parsen, Maße/Zeiten/Bilder extrahieren, als Layout nachbauen. |
