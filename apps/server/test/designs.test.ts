@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { startServer, type RunningServer } from '../src/server.js';
+import { readZip, writeZip } from '../src/zip.js';
 
 let dir: string;
 let server: RunningServer | null = null;
@@ -108,3 +109,97 @@ describe('Designs importieren und exportieren', () => {
     ws.terminate();
   });
 });
+
+const png = (extra = 'x') => Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.from(extra)]);
+const postZip = (entries: Array<{ name: string; data: Buffer }>, query = '') =>
+  fetch(`${base()}/api/profiles${query}`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/zip', origin: base() },
+    body: writeZip(entries),
+  });
+const pkgProfile = { name: 'Paket Design', scoreboard: { bild: { image: 'board.png' } }, cards: { batter: { logo: 'logo.png' } } };
+const pkg = (profile: unknown = pkgProfile) => [
+  { name: 'design.json', data: Buffer.from(JSON.stringify(profile)) },
+  { name: 'assets/board.png', data: png('board') },
+  { name: 'assets/logo.png', data: png('logo') },
+];
+const limits = { maxEntries: 50, maxEntryBytes: 10_000_000, maxTotalBytes: 20_000_000 };
+
+describe('Design-Pakete (ZIP)', () => {
+  it('importiert ein Paket: Bilder landen mit Vorsatz im Datenordner und werden ausgeliefert', async () => {
+    const res = await postZip(pkg());
+    expect(res.status).toBe(201);
+    expect(await res.json()).toMatchObject({ id: 'paket-design', missingAssets: [], images: 2 });
+    expect((await readdir(path.join(dir, 'assets'))).sort()).toEqual(['paket-design--board.png', 'paket-design--logo.png']);
+    const profile = (await (await fetch(base() + '/api/profiles/paket-design')).json()) as { scoreboard: { bild: { image: string } } };
+    expect(profile.scoreboard.bild.image).toBe('paket-design--board.png');
+    const img = await fetch(base() + '/assets/paket-design--board.png');
+    expect(img.status).toBe(200);
+    expect(img.headers.get('content-type')).toBe('image/png');
+    expect((await fetch(base() + '/assets/voith.jpg')).status).toBe(200);
+  });
+
+  it('exportiert ein Paket mit Bildern und liest es wieder ein', async () => {
+    const res = await fetch(base() + '/api/profiles/hdh?package=1');
+    expect(res.headers.get('content-type')).toBe('application/zip');
+    const entries = readZip(Buffer.from(await res.arrayBuffer()), limits);
+    const names = entries.map((e) => e.name).sort();
+    expect(names).toContain('design.json');
+    expect(names).toContain('assets/scoreboard-hdh.jpg');
+    expect(names).toContain('assets/voith.jpg');
+    const again = await postZip(entries);
+    expect(again.status).toBe(201);
+    expect(await again.json()).toMatchObject({ id: 'layout-hdh', missingAssets: [], images: 4 });
+    expect((await postZip(entries)).status).toBe(409);
+    expect((await fetch(base() + '/assets/layout-hdh--voith.jpg')).status).toBe(200);
+  });
+
+  it('ein exportiertes eigenes Paket enthält die Bilder ohne Vorsatz', async () => {
+    await postZip(pkg());
+    const res = await fetch(base() + '/api/profiles/paket-design?package=1');
+    const entries = readZip(Buffer.from(await res.arrayBuffer()), limits);
+    expect(entries.map((e) => e.name).sort()).toEqual(['assets/board.png', 'assets/logo.png', 'design.json']);
+    const profile = JSON.parse(entries.find((e) => e.name === 'design.json')!.data.toString()) as { scoreboard: { bild: { image: string } } };
+    expect(profile.scoreboard.bild.image).toBe('board.png');
+  });
+
+  it('ersetzt beim erneuten Import die alten Bilder und entfernt sie beim Löschen', async () => {
+    await postZip(pkg());
+    const second = [
+      { name: 'design.json', data: Buffer.from(JSON.stringify({ name: 'Paket Design', scoreboard: { bild: { image: 'neu.png' } } })) },
+      { name: 'assets/neu.png', data: png('neu') },
+    ];
+    expect((await postZip(second, '?overwrite=1')).status).toBe(200);
+    expect(await readdir(path.join(dir, 'assets'))).toEqual(['paket-design--neu.png']);
+    const del = await fetch(`${base()}/api/profiles/paket-design`, { method: 'DELETE', headers: { origin: base() } });
+    expect(del.status).toBe(200);
+    expect(await readdir(path.join(dir, 'assets'))).toEqual([]);
+    expect((await fetch(base() + '/assets/paket-design--neu.png')).status).toBe(404);
+  });
+
+  it('meldet Bilder, die weder im Paket noch vorhanden sind', async () => {
+    const res = await postZip([
+      { name: 'design.json', data: Buffer.from(JSON.stringify({ name: 'Lücke', scoreboard: { bild: { image: 'fehlt.png' } } })) },
+    ]);
+    expect(await res.json()).toMatchObject({ missingAssets: ['fehlt.png'], images: 0 });
+  });
+
+  it('lehnt unsichere Pakete ab und legt nichts ab', async () => {
+    const attempts: Array<Array<{ name: string; data: Buffer }>> = [
+      [{ name: 'assets/board.png', data: png() }], // design.json fehlt
+      [...pkg(), { name: 'run.js', data: Buffer.from('boese()') }], // fremde Datei
+      [...pkg(), { name: 'assets/../../evil.png', data: png() }], // Pfad
+      [{ name: 'design.json', data: Buffer.from(JSON.stringify(pkgProfile)) }, { name: 'assets/board.png', data: Buffer.from('kein bild') }],
+      [{ name: 'design.json', data: Buffer.from(JSON.stringify(pkgProfile)) }, { name: 'assets/board.svg', data: Buffer.from('<svg xmlns="x"><script>alert(1)</script></svg>') }],
+      [{ name: 'design.json', data: Buffer.from(JSON.stringify(pkgProfile)) }, { name: `assets/${'a'.repeat(40)}.png`, data: png() }], // Name zu lang
+      [{ name: 'design.json', data: Buffer.from('kein json') }],
+      [{ name: 'design.json', data: Buffer.from(JSON.stringify({ name: 'X', colors: { panel: 'url(http://a)' } })) }],
+    ];
+    for (const entries of attempts) expect((await postZip(entries)).status).toBe(400);
+    const broken = await fetch(base() + '/api/profiles', { method: 'POST', headers: { 'content-type': 'application/zip', origin: base() }, body: Buffer.from('kein zip') });
+    expect(broken.status).toBe(400);
+    expect((await state()).profiles.every((p) => !p.custom)).toBe(true);
+    expect(await readdir(dir)).not.toContain('assets');
+  });
+});
+

@@ -68,12 +68,15 @@
       <section class="panel">
         <h2>Design exportieren</h2>
         <label>Design <select id="export-design"></select></label>
-        <button type="button" id="export-btn">Als Datei speichern</button>
-        <p class="hint">Gespeichert wird die Design-Datei (.json). Bilder aus <code>config/assets</code> sind nicht dabei; sie müssen beim Empfänger im selben Ordner liegen.</p>
+        <div class="grid">
+          <button type="button" id="export-pack">Paket mit Bildern (.zip)</button>
+          <button type="button" id="export-btn">Nur Design-Datei (.json)</button>
+        </div>
+        <p class="hint">Das Paket enthält das Design und alle Bilder, die es braucht. Die reine Design-Datei enthält keine Bilder; sie müssen beim Empfänger in <code>config/assets</code> liegen.</p>
       </section>
       <section class="panel">
         <h2>Design importieren</h2>
-        <label>Design-Datei (.json) <input type="file" id="import-file" accept=".json,application/json"></label>
+        <label>Design-Paket (.zip) oder Design-Datei (.json) <input type="file" id="import-file" accept=".zip,.json,application/zip,application/json"></label>
         <label class="check"><input type="checkbox" id="import-overwrite"> Vorhandenes eigenes Design gleichen Namens ersetzen</label>
         <p class="hint" id="import-result" role="status" hidden></p>
         <h3>Eigene Designs</h3>

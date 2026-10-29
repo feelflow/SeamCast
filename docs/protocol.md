@@ -43,3 +43,11 @@ Writes require `Content-Type: application/json` and a same-origin `Origin` heade
 - `POST /api/profiles[?id=<kennung>][&overwrite=1]` – Body: Profil-JSON (`application/json`, max 128 KB, gleiche Herkunft). Prüfung in `checkProfile` (`packages/core/src/profile.ts`): nur bekannte Abschnitte, `name` Pflicht, keine Markup-/Skript-/Adress-Texte, Bilder nur als reiner Dateiname aus `config/assets`. Antwort `{id, name, replaced, missingAssets}`; `409` bei vorhandenem Namen (ohne `overwrite=1`) und bei mitgelieferten Designs.
 - `DELETE /api/profiles/<id>` – nur importierte Designs und nur, wenn sie nicht als Grundprofil oder Layout gewählt sind.
 - Importierte Designs liegen im Datenordner (`data/profiles/`), nie im Programmordner; mitgelieferte (`config/profiles/`) haben bei gleicher Kennung Vorrang. Im Snapshot trägt jedes importierte Design `custom: true` in `profiles`.
+
+### Design-Pakete (ZIP)
+
+- `GET /api/profiles/<id>?package=1` – ZIP mit `design.json` und `assets/<Bild>` (alle vom Design genutzten Bilder; bei eigenen Designs ohne den internen Vorsatz `<id>--`).
+- `POST /api/profiles` mit `Content-Type: application/zip` – importiert ein Paket (max 20 MB, höchstens 40 Dateien, Bild max 4 MB, Bildname max 30 Zeichen). Erlaubt sind nur `design.json` und `assets/<png|jpg|webp|svg>`; Bildinhalt wird gegen den Dateityp geprüft, SVG darf nichts Ausführbares oder Externes enthalten. Kein Code, keine Schriften. Die Bilder landen in `data/assets/<id>--<Name>` (so überschreibt nie ein Paket mitgelieferte Bilder), das Profil wird entsprechend umgeschrieben. Antwort wie beim JSON-Import plus `images` (Anzahl). Beim Ersetzen und Löschen eines Designs werden seine Bilder entfernt.
+- `GET /assets/<Datei>` sucht zuerst in `config/assets/`, dann in `data/assets/`.
+- Umsetzung: `apps/server/src/zip.ts` (eigener, begrenzter ZIP-Leser/-Schreiber ohne Zusatzpaket), `apps/server/src/designPackage.ts`.
+
