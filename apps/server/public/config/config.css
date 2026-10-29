@@ -3,3 +3,7 @@
 .group.graphics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .pv { position: relative; overflow: hidden; margin-top: 10px; border: 1px solid var(--line); border-radius: 8px; background: #3a3f47; }
 @media (max-width: 900px) { .group.graphics { grid-template-columns: minmax(0, 1fr); } }
+.check { display: flex; align-items: center; gap: 8px; }
+#import-result[data-ok='false'] { color: #b42318; }
+#import-result[data-ok='true'] { color: #1a7f37; }
+.custom-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px solid var(--line); }

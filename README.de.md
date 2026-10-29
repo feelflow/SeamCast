@@ -19,6 +19,7 @@ pnpm start
 - Scoreboard-Overlay: http://127.0.0.1:8080/overlay/scoreboard.html (transparent, als Browserquelle in OBS/vMix einbinden)
 - Anderes Design: in der Bedienung unter „Spiel → Design“ wählen, alle Overlays folgen (die Adressen bleiben gleich). Mit `?profile=<id>` in der Adresse lässt sich ein Overlay fest auf ein Design stellen. Eigene Designs sind JSON-Profile in `config/profiles/`; `"design"` wählt das Scoreboard-Layout (`modern`, `tafel` oder `bild` = nach Bildvorlage mit Maßen im Abschnitt `"bild"`), Farben und Beschriftungen stehen im selben Profil. Ein Abschnitt `"scoreboard"` im Profil überschreibt Einstellungen nur für das Scoreboard.
 - Spielerkarten (Schlagmann/Pitcher): http://127.0.0.1:8080/overlay/players.html – Spieler wählst du in der Bedienung unter „Spielerkarten“, Werte stammen aus den importierten Saisonstatistiken.
+- Designs teilen: Unter http://127.0.0.1:8080/config/ → „Designs teilen“ lässt sich ein Design als Datei exportieren und eine Design-Datei importieren (landet im Ordner `data/profiles`). Bilder aus `config/assets` werden nicht mitgenommen.
 - Line Up: http://127.0.0.1:8080/overlay/lineup.html – Schlagreihenfolge unter „Line Up bearbeiten“ in der Bedienung pflegen (wird automatisch gespeichert), dann mit den Knöpfen unter „Line Up“ einblenden.
 
 Unter Windows reicht ein Doppelklick auf `start-seamcast.bat`: Sie aktualisiert, installiert, startet neu bei Absturz und öffnet die Bedienung im Browser.

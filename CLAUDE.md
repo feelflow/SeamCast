@@ -55,7 +55,7 @@ Neue Aufgabe zu SeamCast: erst hier das passende Thema suchen, dann `gh api repo
 | 12 | Softball-Besonderheiten | idea | Profil softball7 existiert; weitere Regeln und Anzeigen prüfen. |
 | 13 | Installer / Start ohne Node-Kenntnisse | idea | Nutzer ist Laie; Windows. Heute: Node 22.13+ und pnpm nötig. Hinweis: pnpm 11 hat `minimumReleaseAge`, Lockfile mit pnpm 11 erzeugt. |
 | 16 | Design-Wahl in der Bedienung | fertig | Unter „Spiel → Design" wählbar, Server speichert (`profile`), Overlays folgen, `?profile=` pinnt. Designs = JSON in `config/profiles/` (`design`: `modern`/`tafel`/`bild`, auch im Abschnitt `scoreboard`). Seit #27 je Grafik wählbar unter `/config/`; Layouts aufgeräumt: nur `default` und `hdh`. |
-| 19 | Design-Import/-Export (Profil-Datei) | idea | Nutzer: „erstmal muss die App laufen" – nicht vorziehen. |
+| 19 | Design-Import/-Export (Profil-Datei) | fertig | Unter `/config/` → „Designs teilen“. Importierte Designs liegen in `data/profiles/` (nicht im Git), Prüfung `checkProfile` im Kern; Bilder werden nicht mitgenommen (fehlende werden gemeldet) – dafür #20. Nutzer: „erstmal muss die App laufen". |
 | 20 | Design-Pakete (ZIP mit Layout, Logos, Schriften) | idea | Setzt #19 voraus; importierter Code muss abgesichert werden. |
 | 37 | Weitere Spielzüge und Spielende | idea | Offen: Dropped Third Strike, Final/Mercy Rule, Extra Innings (Softball-Tiebreaker), Interference. Schon da: Intentional Walk, Balk, Base Stealing (Steal/WP/PB/Caught Stealing), Out fragt bei Läufern nach dem Ziel (Sac Fly, Doppelspiel). |
 | 46 | Start auf dem Mac | fertig (ungetestet) | `start-seamcast.command` (Doppelklick, spiegelt die .bat), README-Abschnitt „Mac“. Auf echtem Mac noch nicht geprüft; vMix nur Windows. Teil von #13. |

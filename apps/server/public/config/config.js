@@ -48,6 +48,33 @@ function render(msg) {
     select.value = msg.layouts?.[graphic] ?? '';
   }
 
+  // Designs teilen
+  const exportSelect = $('export-design');
+  if (exportSelect.dataset.sig !== sig) {
+    const keep = exportSelect.value;
+    exportSelect.dataset.sig = sig;
+    exportSelect.replaceChildren(...msg.profiles.map((p) => new Option(p.name, p.id)));
+    if (keep) exportSelect.value = keep;
+    const list = $('custom-list');
+    const custom = msg.profiles.filter((p) => p.custom);
+    list.replaceChildren(
+      ...(custom.length
+        ? custom.map((p) => {
+            const row = document.createElement('div');
+            row.className = 'custom-row';
+            const name = document.createElement('span');
+            name.textContent = p.name;
+            const remove = document.createElement('button');
+            remove.type = 'button';
+            remove.textContent = 'Löschen';
+            remove.addEventListener('click', () => deleteDesign(p));
+            row.append(name, remove);
+            return row;
+          })
+        : [Object.assign(document.createElement('p'), { className: 'hint', textContent: 'Noch keine importierten Designs.' })]),
+    );
+  }
+
   // Regeln
   const rules = $('rules');
   if (rules.options.length === 0) {
@@ -154,3 +181,61 @@ for (const button of document.querySelectorAll('button[data-test]')) {
   button.addEventListener('click', () => send({ type: 'event', kind: button.dataset.test }));
 }
 connect();
+
+// --- Designs exportieren, importieren, löschen --------------------------------------
+function importMessage(text, ok) {
+  const el = $('import-result');
+  el.textContent = text;
+  el.dataset.ok = String(ok);
+  el.hidden = false;
+}
+
+$('export-btn').addEventListener('click', () => {
+  const id = $('export-design').value;
+  if (!id) return;
+  const link = document.createElement('a');
+  link.href = `/api/profiles/${encodeURIComponent(id)}?download=1`;
+  link.download = `seamcast-design-${id}.json`;
+  document.body.append(link);
+  link.click();
+  link.remove();
+});
+
+$('import-file').addEventListener('change', async (event) => {
+  const input = event.target;
+  const file = input.files && input.files[0];
+  if (!file) return;
+  try {
+    if (file.size > 128 * 1024) {
+      importMessage('Die Datei ist zu groß für eine Design-Datei.', false);
+      return;
+    }
+    const text = await file.text();
+    const overwrite = $('import-overwrite').checked ? '?overwrite=1' : '';
+    const res = await fetch(`/api/profiles${overwrite}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: text,
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      importMessage(body.exists ? `${body.error} Häkchen „ersetzen“ setzen oder den Namen in der Datei ändern.` : (body.error ?? 'Import fehlgeschlagen.'), false);
+      return;
+    }
+    let message = `„${body.name}“ ${body.replaced ? 'ersetzt' : 'importiert'}. Du findest es jetzt in den Layout-Listen.`;
+    if (body.missingAssets && body.missingAssets.length) {
+      message += ` Es fehlen noch Bilder in config/assets: ${body.missingAssets.join(', ')}`;
+    }
+    importMessage(message, true);
+  } catch {
+    importMessage('Die Datei konnte nicht gelesen werden.', false);
+  } finally {
+    input.value = '';
+  }
+});
+
+async function deleteDesign(profile) {
+  const res = await fetch(`/api/profiles/${encodeURIComponent(profile.id)}`, { method: 'DELETE' });
+  const body = await res.json().catch(() => ({}));
+  importMessage(res.ok ? `„${profile.name}“ gelöscht.` : (body.error ?? 'Löschen fehlgeschlagen.'), res.ok);
+}
