@@ -15,6 +15,8 @@ pnpm install
 pnpm start
 ```
 
+On Windows double-click `start-seamcast.bat`; on a Mac (after `brew install node git`) double-click `start-seamcast.command`. Both update, install, restart after a crash and open the control page. vMix is Windows-only; OBS runs on both.
+
 - Control page: http://127.0.0.1:8080/control/
 - Scoreboard overlay: http://127.0.0.1:8080/overlay/scoreboard.html (transparent; add as browser source in OBS/vMix)
 - Other design: pick it on the control page under "Spiel → Design"; all overlays follow (URLs stay the same). Appending `?profile=<id>` pins an overlay to one design. Custom designs are JSON profiles in `config/profiles/`; `"design"` picks the scoreboard layout (`modern` or `tafel`), colors and labels live in the same profile. A `"scoreboard"` section in a profile overrides settings for the scoreboard only.

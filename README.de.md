@@ -23,6 +23,8 @@ pnpm start
 
 Unter Windows reicht ein Doppelklick auf `start-seamcast.bat`: Sie aktualisiert, installiert, startet neu bei Absturz und öffnet die Bedienung im Browser.
 
+**Mac:** Einmalig [Homebrew](https://brew.sh) installieren, dann im Terminal `brew install node git` und das Repo mit `git clone https://github.com/feelflow/SeamCast.git` holen. Danach genügt ein Doppelklick auf `start-seamcast.command` (macht dasselbe wie die `.bat`). Beim ersten Mal fragt macOS eventuell nach: Rechtsklick auf die Datei, „Öffnen“. Hinweis: vMix gibt es nur für Windows; OBS läuft auch auf dem Mac.
+
 Mannschaften und Spieler pflegst du unter http://127.0.0.1:8080/kader/ und übernimmst sie in der Bedienung per Auswahl „Gast/Heim aus Kader“.
 
 Die alte Access-Datei des HTV-Managers importierst du auf derselben Seite (zuerst Vorschau, dann Import; wiederholbar). Statistik-Quoten (AVG, ERA …) rechnet SeamCast aus den Rohwerten selbst.
