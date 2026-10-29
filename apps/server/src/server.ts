@@ -8,6 +8,7 @@ import { createRepo, openDatabase } from './db.js';
 import { buildLineup, currentBatterId, currentPitcherId, emptyLineups, parseSlots, readLineups, withPitcher, type Lineups } from './lineup.js';
 import { buildCard, emptyMatchup, readMatchup, type Matchup } from './cards.js';
 import { importFromAccess } from './importer.js';
+import { PACKAGE_LIMITS, buildDesignPackage, readDesignPackage, renameAssets } from './designPackage.js';
 import { statLines } from './statlines.js';
 import { createPersistence } from './persist.js';
 
@@ -148,6 +149,8 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
   const publicDir = path.resolve(options.publicDir ?? path.join(here, '../public'));
   const profilesDir = path.resolve(options.profilesDir ?? path.join(repoRoot, 'config/profiles'));
   const assetsDir = path.resolve(options.assetsDir ?? path.join(repoRoot, 'config/assets'));
+  /** Bilder importierter Design-Pakete; Dateinamen beginnen mit `<Design>--`, damit nie ein mitgeliefertes Bild überschrieben wird. */
+  const userAssetsDir = path.join(dataDir, 'assets');
 
   let game = new Game();
   let graphics: Graphics = { scoreboard: true, batter: false, pitcher: false, lineupAway: false, lineupHome: false };
@@ -361,6 +364,25 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
     return true;
   }
 
+  /** Bild suchen: zuerst die mitgelieferten, dann die aus importierten Paketen. */
+  async function readAsset(name: string): Promise<Buffer | null> {
+    if (!ASSET_FILE.test(name)) return null;
+    for (const dir of [assetsDir, userAssetsDir]) {
+      try {
+        return await readFile(path.join(dir, name));
+      } catch {
+        // nächster Ordner
+      }
+    }
+    return null;
+  }
+
+  /** Bilder eines importierten Designs entfernen (alle Dateien `<Kennung>--…`). */
+  async function removeUserAssets(id: string): Promise<void> {
+    const files = await readdir(userAssetsDir).catch(() => [] as string[]);
+    await Promise.all(files.filter((f) => f.startsWith(`${id}--`)).map((f) => unlink(path.join(userAssetsDir, f)).catch(() => undefined)));
+  }
+
   /** Importierte Designs: POST /api/profiles, DELETE /api/profiles/<id>. Gespeichert im Datenordner, nie im Programmordner. */
   async function handleProfiles(
     req: http.IncomingMessage,
@@ -388,6 +410,7 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
         json(res, 409, { error: 'Das Design ist noch in Gebrauch. Bitte zuerst ein anderes wählen.' });
       } else {
         await unlink(path.join(customProfilesDir, `${given}.json`)).catch(() => undefined);
+        await removeUserAssets(given as string);
         profileList = await listProfiles(profilesDir, customProfilesDir);
         broadcast();
         json(res, 200, { deleted: given });
@@ -396,12 +419,31 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
     }
 
     let body: unknown;
-    try {
-      body = await readJson(req, PROFILE_LIMITS.bytes);
-    } catch (error) {
-      const tooLarge = error instanceof Error && error.message === 'too large';
-      json(res, tooLarge ? 413 : 400, { error: tooLarge ? 'Die Datei ist zu groß.' : 'Das ist keine gültige Design-Datei (JSON).' });
-      return true;
+    let images = new Map<string, Buffer>();
+    const contentType = req.headers['content-type'] ?? '';
+    if (/^application\/(zip|x-zip-compressed|octet-stream)\b/i.test(contentType)) {
+      let file: Buffer;
+      try {
+        file = await readBinary(req, PACKAGE_LIMITS.maxZipBytes);
+      } catch {
+        json(res, 413, { error: 'Das Paket ist zu groß.' });
+        return true;
+      }
+      const pack = readDesignPackage(file);
+      if (!pack.ok) {
+        json(res, 400, { error: pack.error });
+        return true;
+      }
+      body = pack.profile;
+      images = pack.images;
+    } else {
+      try {
+        body = await readJson(req, PROFILE_LIMITS.bytes);
+      } catch (error) {
+        const tooLarge = error instanceof Error && error.message === 'too large';
+        json(res, tooLarge ? 413 : 400, { error: tooLarge ? 'Die Datei ist zu groß.' : 'Das ist keine gültige Design-Datei (JSON oder ZIP-Paket).' });
+        return true;
+      }
     }
     const checked = checkProfile(body);
     if (!checked.ok) {
@@ -423,19 +465,35 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
       json(res, 409, { error: `Es gibt schon ein Design „${existing.name}“.`, exists: true, id });
       return true;
     }
+    let profile = checked.profile;
+    if (images.size > 0) {
+      // Mitgebrachte Bilder bekommen die Kennung des Designs als Vorsatz und liegen im Datenordner
+      const renamed = renameAssets(profile, (name) => (images.has(name) ? `${id}--${name}` : null));
+      const again = checkProfile(renamed);
+      if (!again.ok) {
+        json(res, 400, { error: again.error });
+        return true;
+      }
+      profile = again.profile;
+      await removeUserAssets(id);
+      await mkdir(userAssetsDir, { recursive: true });
+      for (const [name, data] of images) {
+        if (checked.assets.includes(name)) await writeFile(path.join(userAssetsDir, `${id}--${name}`), data);
+      }
+    }
     await mkdir(customProfilesDir, { recursive: true });
     const target = path.join(customProfilesDir, `${id}.json`);
     const temp = `${target}.tmp`;
-    await writeFile(temp, JSON.stringify(checked.profile, null, 2), 'utf8');
+    await writeFile(temp, JSON.stringify(profile, null, 2), 'utf8');
     await rename(temp, target);
     profileList = await listProfiles(profilesDir, customProfilesDir);
     const missing: string[] = [];
-    for (const name of checked.assets) {
-      if (!(await stat(path.join(assetsDir, name)).then(() => true, () => false))) missing.push(name);
+    for (const name of checkProfile(profile).ok ? (checkProfile(profile) as { assets: string[] }).assets : []) {
+      if (!(await readAsset(name))) missing.push(name);
     }
     log(`Design „${String(checked.profile.name)}“ importiert (${id}).`);
     broadcast();
-    json(res, existing ? 200 : 201, { id, name: String(checked.profile.name), replaced: Boolean(existing), missingAssets: missing });
+    json(res, existing ? 200 : 201, { id, name: String(checked.profile.name), replaced: Boolean(existing), missingAssets: missing, images: images.size });
     return true;
   }
 
@@ -551,6 +609,25 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
         if (!entry) return send(res, 404, 'Profil nicht gefunden', 'text/plain; charset=utf-8', head);
         const dir = entry.custom ? customProfilesDir : profilesDir;
         const profile: unknown = JSON.parse(await readFile(path.join(dir, `${id}.json`), 'utf8'));
+        if (search.get('package') === '1') {
+          const prefix = entry.custom ? `${id}--` : '';
+          const list = checkProfile(profile);
+          const files = new Map<string, Buffer>();
+          for (const name of list.ok ? list.assets : []) {
+            const data = await readAsset(name);
+            if (data) files.set(prefix && name.startsWith(prefix) ? name.slice(prefix.length) : name, data);
+          }
+          const bare = renameAssets(profile, (name) => (prefix && name.startsWith(prefix) ? name.slice(prefix.length) : null));
+          const zip = buildDesignPackage(bare, files);
+          res.writeHead(200, {
+            'Content-Type': 'application/zip',
+            'Content-Length': zip.length,
+            'Content-Disposition': `attachment; filename="seamcast-design-${id}.zip"`,
+            'Cache-Control': 'no-cache',
+            'X-Content-Type-Options': 'nosniff',
+          });
+          return res.end(head ? undefined : zip);
+        }
         const extra = search.get('download') === '1' ? { 'Content-Disposition': `attachment; filename="seamcast-design-${id}.json"` } : undefined;
         return send(res, 200, JSON.stringify(profile, null, extra ? 2 : undefined), MIME['.json']!, head, extra);
       } catch {
@@ -564,7 +641,8 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
         return send(res, 404, 'Nicht gefunden', 'text/plain; charset=utf-8', head);
       }
       try {
-        const body = await readFile(path.join(assetsDir, name));
+        const body = await readAsset(name);
+        if (!body) return send(res, 404, 'Nicht gefunden', 'text/plain; charset=utf-8', head);
         res.writeHead(200, {
           'Content-Type': MIME[path.extname(name).toLowerCase()] ?? 'application/octet-stream',
           'Content-Length': body.length,

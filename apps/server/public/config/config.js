@@ -20,7 +20,11 @@ function showError(text) {
   errorTimer = setTimeout(() => (chip.hidden = true), 3000);
 }
 
-const nameOf = (msg, id) => msg.profiles.find((p) => p.id === id)?.name ?? id;
+const labelOf = (p) => (p.custom ? `${p.name} (eigenes)` : p.name);
+const nameOf = (msg, id) => {
+  const p = msg.profiles.find((x) => x.id === id);
+  return p ? labelOf(p) : id;
+};
 
 function render(msg) {
   last = msg;
@@ -30,7 +34,7 @@ function render(msg) {
   const base = $('design');
   if (base.dataset.sig !== sig) {
     base.dataset.sig = sig;
-    base.replaceChildren(...msg.profiles.map((p) => new Option(p.name, p.id)));
+    base.replaceChildren(...msg.profiles.map((p) => new Option(labelOf(p), p.id)));
   }
   base.value = msg.profile;
 
@@ -42,7 +46,7 @@ function render(msg) {
       select.dataset.sig = key;
       select.replaceChildren(
         new Option(`Wie Grundprofil (${nameOf(msg, msg.profile)})`, ''),
-        ...msg.profiles.map((p) => new Option(p.name, p.id)),
+        ...msg.profiles.map((p) => new Option(labelOf(p), p.id)),
       );
     }
     select.value = msg.layouts?.[graphic] ?? '';
@@ -53,7 +57,7 @@ function render(msg) {
   if (exportSelect.dataset.sig !== sig) {
     const keep = exportSelect.value;
     exportSelect.dataset.sig = sig;
-    exportSelect.replaceChildren(...msg.profiles.map((p) => new Option(p.name, p.id)));
+    exportSelect.replaceChildren(...msg.profiles.map((p) => new Option(labelOf(p), p.id)));
     if (keep) exportSelect.value = keep;
     const list = $('custom-list');
     const custom = msg.profiles.filter((p) => p.custom);
@@ -190,39 +194,41 @@ function importMessage(text, ok) {
   el.hidden = false;
 }
 
-$('export-btn').addEventListener('click', () => {
+function downloadDesign(query, extension) {
   const id = $('export-design').value;
   if (!id) return;
   const link = document.createElement('a');
-  link.href = `/api/profiles/${encodeURIComponent(id)}?download=1`;
-  link.download = `seamcast-design-${id}.json`;
+  link.href = `/api/profiles/${encodeURIComponent(id)}?${query}=1`;
+  link.download = `seamcast-design-${id}.${extension}`;
   document.body.append(link);
   link.click();
   link.remove();
-});
+}
+$('export-btn').addEventListener('click', () => downloadDesign('download', 'json'));
+$('export-pack').addEventListener('click', () => downloadDesign('package', 'zip'));
 
 $('import-file').addEventListener('change', async (event) => {
   const input = event.target;
   const file = input.files && input.files[0];
   if (!file) return;
   try {
-    if (file.size > 128 * 1024) {
-      importMessage('Die Datei ist zu groß für eine Design-Datei.', false);
+    const isZip = /\.zip$/i.test(file.name);
+    if (file.size > (isZip ? 20 * 1024 * 1024 : 128 * 1024)) {
+      importMessage('Die Datei ist zu groß für ein Design.', false);
       return;
     }
-    const text = await file.text();
     const overwrite = $('import-overwrite').checked ? '?overwrite=1' : '';
     const res = await fetch(`/api/profiles${overwrite}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: text,
+      headers: { 'Content-Type': isZip ? 'application/zip' : 'application/json' },
+      body: isZip ? await file.arrayBuffer() : await file.text(),
     });
     const body = await res.json().catch(() => ({}));
     if (!res.ok) {
       importMessage(body.exists ? `${body.error} Häkchen „ersetzen“ setzen oder den Namen in der Datei ändern.` : (body.error ?? 'Import fehlgeschlagen.'), false);
       return;
     }
-    let message = `„${body.name}“ ${body.replaced ? 'ersetzt' : 'importiert'}. Du findest es jetzt in den Layout-Listen.`;
+    let message = `„${body.name}“ ${body.replaced ? 'ersetzt' : 'importiert'}${body.images ? ` (${body.images} Bilder)` : ''}. Du findest es jetzt in den Layout-Listen.`;
     if (body.missingAssets && body.missingAssets.length) {
       message += ` Es fehlen noch Bilder in config/assets: ${body.missingAssets.join(', ')}`;
     }
