@@ -36,3 +36,10 @@ Writes require `Content-Type: application/json` and a same-origin `Origin` heade
 
 - `GET /api/players/<id>/stats` – batting and pitching lines per round with computed rates, plus totals
 - `POST /api/import/access[?dryRun=1]` – body: the `.accdb` file (`application/octet-stream`, max 50 MB); responds with an import report. Teams are matched by name, players by league id, stats by player/season/round, so imports can be repeated.
+
+## Designs (Profile) importieren und exportieren
+
+- `GET /api/profiles/<id>[?download=1]` – Profil als JSON; mit `download=1` als Dateidownload (`seamcast-design-<id>.json`).
+- `POST /api/profiles[?id=<kennung>][&overwrite=1]` – Body: Profil-JSON (`application/json`, max 128 KB, gleiche Herkunft). Prüfung in `checkProfile` (`packages/core/src/profile.ts`): nur bekannte Abschnitte, `name` Pflicht, keine Markup-/Skript-/Adress-Texte, Bilder nur als reiner Dateiname aus `config/assets`. Antwort `{id, name, replaced, missingAssets}`; `409` bei vorhandenem Namen (ohne `overwrite=1`) und bei mitgelieferten Designs.
+- `DELETE /api/profiles/<id>` – nur importierte Designs und nur, wenn sie nicht als Grundprofil oder Layout gewählt sind.
+- Importierte Designs liegen im Datenordner (`data/profiles/`), nie im Programmordner; mitgelieferte (`config/profiles/`) haben bei gleicher Kennung Vorrang. Im Snapshot trägt jedes importierte Design `custom: true` in `profiles`.

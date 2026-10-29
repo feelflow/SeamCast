@@ -6,4 +6,5 @@ export * from './validate.js';
 export * from './stats.js';
 export * from './roster.js';
 export * from './accessImport.js';
+export * from './profile.js';
 export * from './events.js';

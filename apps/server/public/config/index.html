@@ -63,6 +63,24 @@
       </section>
     </div>
 
+    <h2 class="group-title">Designs teilen</h2>
+    <div class="group">
+      <section class="panel">
+        <h2>Design exportieren</h2>
+        <label>Design <select id="export-design"></select></label>
+        <button type="button" id="export-btn">Als Datei speichern</button>
+        <p class="hint">Gespeichert wird die Design-Datei (.json). Bilder aus <code>config/assets</code> sind nicht dabei; sie müssen beim Empfänger im selben Ordner liegen.</p>
+      </section>
+      <section class="panel">
+        <h2>Design importieren</h2>
+        <label>Design-Datei (.json) <input type="file" id="import-file" accept=".json,application/json"></label>
+        <label class="check"><input type="checkbox" id="import-overwrite"> Vorhandenes eigenes Design gleichen Namens ersetzen</label>
+        <p class="hint" id="import-result" role="status" hidden></p>
+        <h3>Eigene Designs</h3>
+        <div id="custom-list" class="custom-list"></div>
+      </section>
+    </div>
+
     <h2 class="group-title">Spiel</h2>
     <div class="group">
       <section class="panel">

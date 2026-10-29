@@ -1,9 +1,9 @@
 import http from 'node:http';
-import { readFile, readdir, stat } from 'node:fs/promises';
+import { mkdir, readFile, readdir, rename, stat, unlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { WebSocketServer, type WebSocket } from 'ws';
-import { Game, RULE_PROFILES, battingSide, detectEvent, fieldingSide, isGameEvent, parseAction, parsePlayerInput, parseTeamInput, type GameEvent, type Side } from '@seamcast/core';
+import { ASSET_FILE_PATTERN, Game, PROFILE_ID_PATTERN, PROFILE_LIMITS, RULE_PROFILES, checkProfile, profileIdFromName, battingSide, detectEvent, fieldingSide, isGameEvent, parseAction, parsePlayerInput, parseTeamInput, type GameEvent, type Side } from '@seamcast/core';
 import { createRepo, openDatabase } from './db.js';
 import { buildLineup, currentBatterId, currentPitcherId, emptyLineups, parseSlots, readLineups, withPitcher, type Lineups } from './lineup.js';
 import { buildCard, emptyMatchup, readMatchup, type Matchup } from './cards.js';
@@ -59,7 +59,7 @@ const MIME: Record<string, string> = {
 };
 
 /** Bilddateien aus config/assets (z. B. Sponsor-Logos): reiner Dateiname, nur Bildformate. */
-const ASSET_FILE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,80}\.(png|jpe?g|webp|svg)$/i;
+const ASSET_FILE = ASSET_FILE_PATTERN;
 
 const CSP = [
   "default-src 'self'",
@@ -72,27 +72,41 @@ const CSP = [
   "form-action 'none'",
 ].join('; ');
 
-const PROFILE_ID = /^[a-z0-9-]{1,40}$/;
+const PROFILE_ID = PROFILE_ID_PATTERN;
 
-/** Alle Grafikprofile im Ordner: Kennung und Anzeigename. */
-async function listProfiles(dir: string): Promise<Array<{ id: string; name: string }>> {
-  const result: Array<{ id: string; name: string }> = [];
+interface ProfileEntry {
+  id: string;
+  name: string;
+  /** Eigenes (importiertes) Design; kann gelöscht werden. Mitgelieferte Designs nicht. */
+  custom?: boolean;
+}
+
+async function readProfileDir(dir: string, custom: boolean, taken: Set<string>): Promise<ProfileEntry[]> {
+  const result: ProfileEntry[] = [];
   let files: string[] = [];
   try {
     files = (await readdir(dir)).sort();
   } catch {
-    return [{ id: 'default', name: 'Standard' }];
+    return result;
   }
   for (const file of files) {
     const id = file.replace(/\.json$/, '');
-    if (!file.endsWith('.json') || !PROFILE_ID.test(id)) continue;
+    if (!file.endsWith('.json') || !PROFILE_ID.test(id) || taken.has(id)) continue;
     try {
       const parsed = JSON.parse(await readFile(path.join(dir, file), 'utf8')) as { name?: unknown };
-      result.push({ id, name: typeof parsed.name === 'string' ? parsed.name : id });
+      taken.add(id);
+      result.push({ id, name: typeof parsed.name === 'string' ? parsed.name : id, ...(custom ? { custom: true } : {}) });
     } catch {
       // kaputte Profildatei überspringen
     }
   }
+  return result;
+}
+
+/** Alle Grafikprofile: zuerst die mitgelieferten, dann die importierten (mitgelieferte haben Vorrang bei gleicher Kennung). */
+async function listProfiles(builtinDir: string, customDir: string): Promise<ProfileEntry[]> {
+  const taken = new Set<string>();
+  const result = [...(await readProfileDir(builtinDir, false, taken)), ...(await readProfileDir(customDir, true, taken))];
   return result.length ? result : [{ id: 'default', name: 'Standard' }];
 }
 
@@ -150,7 +164,8 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
     eventSeq += 1;
     lastEvent = { id: eventSeq, kind };
   };
-  const profileList = await listProfiles(profilesDir);
+  const customProfilesDir = path.join(dataDir, 'profiles');
+  let profileList = await listProfiles(profilesDir, customProfilesDir);
 
   const persistence = createPersistence(
     path.join(dataDir, 'game.json'),
@@ -233,8 +248,16 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
     }
   }
 
-  function send(res: http.ServerResponse, status: number, body: string, type: string, head: boolean) {
+  function send(
+    res: http.ServerResponse,
+    status: number,
+    body: string,
+    type: string,
+    head: boolean,
+    extraHeaders?: Record<string, string>,
+  ) {
     res.writeHead(status, {
+      ...extraHeaders,
       'Content-Type': type,
       'Content-Length': Buffer.byteLength(body),
       'Cache-Control': 'no-cache',
@@ -278,13 +301,13 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
   const json = (res: http.ServerResponse, status: number, body: unknown) =>
     send(res, status, JSON.stringify(body), MIME['.json']!, false);
 
-  async function readJson(req: http.IncomingMessage): Promise<unknown> {
+  async function readJson(req: http.IncomingMessage, limit = 16 * 1024): Promise<unknown> {
     if (!/^application\/json\b/i.test(req.headers['content-type'] ?? '')) throw new Error('content-type');
     const chunks: Buffer[] = [];
     let size = 0;
     for await (const chunk of req) {
       size += (chunk as Buffer).length;
-      if (size > 16 * 1024) throw new Error('too large');
+      if (size > limit) throw new Error('too large');
       chunks.push(chunk as Buffer);
     }
     return JSON.parse(Buffer.concat(chunks).toString('utf8'));
@@ -335,6 +358,84 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
       log(`Import fehlgeschlagen: ${error instanceof Error ? error.message : String(error)}`);
       json(res, 400, { error: 'Die Datei konnte nicht gelesen werden. Ist es die Access-Datei (.accdb) des HTV-Managers?' });
     }
+    return true;
+  }
+
+  /** Importierte Designs: POST /api/profiles, DELETE /api/profiles/<id>. Gespeichert im Datenordner, nie im Programmordner. */
+  async function handleProfiles(
+    req: http.IncomingMessage,
+    res: http.ServerResponse,
+    pathname: string,
+    search: URLSearchParams,
+  ): Promise<boolean> {
+    const match = /^\/api\/profiles(?:\/([^/]+))?$/.exec(pathname);
+    if (!match || (req.method !== 'POST' && req.method !== 'DELETE')) return false;
+    const given = match[1];
+    if ((req.method === 'POST') !== (given === undefined)) {
+      json(res, 405, { error: 'Methode nicht erlaubt' });
+      return true;
+    }
+    if (!sameOrigin(req)) {
+      json(res, 403, { error: 'Fremde Herkunft' });
+      return true;
+    }
+
+    if (req.method === 'DELETE') {
+      const entry = profileList.find((x) => x.id === given);
+      if (!entry) json(res, 404, { error: 'Design nicht gefunden' });
+      else if (!entry.custom) json(res, 403, { error: 'Mitgelieferte Designs lassen sich nicht löschen' });
+      else if (profileId === given || Object.values(layouts).includes(given as never)) {
+        json(res, 409, { error: 'Das Design ist noch in Gebrauch. Bitte zuerst ein anderes wählen.' });
+      } else {
+        await unlink(path.join(customProfilesDir, `${given}.json`)).catch(() => undefined);
+        profileList = await listProfiles(profilesDir, customProfilesDir);
+        broadcast();
+        json(res, 200, { deleted: given });
+      }
+      return true;
+    }
+
+    let body: unknown;
+    try {
+      body = await readJson(req, PROFILE_LIMITS.bytes);
+    } catch (error) {
+      const tooLarge = error instanceof Error && error.message === 'too large';
+      json(res, tooLarge ? 413 : 400, { error: tooLarge ? 'Die Datei ist zu groß.' : 'Das ist keine gültige Design-Datei (JSON).' });
+      return true;
+    }
+    const checked = checkProfile(body);
+    if (!checked.ok) {
+      json(res, 400, { error: checked.error });
+      return true;
+    }
+    const wanted = search.get('id');
+    const id = wanted ?? profileIdFromName(String(checked.profile.name));
+    if (!PROFILE_ID.test(id)) {
+      json(res, 400, { error: 'Ungültige Kennung' });
+      return true;
+    }
+    const existing = profileList.find((x) => x.id === id);
+    if (existing && !existing.custom) {
+      json(res, 409, { error: `„${existing.name}“ ist ein mitgeliefertes Design und lässt sich nicht ersetzen. Bitte den Namen in der Datei ändern.` });
+      return true;
+    }
+    if (existing && search.get('overwrite') !== '1') {
+      json(res, 409, { error: `Es gibt schon ein Design „${existing.name}“.`, exists: true, id });
+      return true;
+    }
+    await mkdir(customProfilesDir, { recursive: true });
+    const target = path.join(customProfilesDir, `${id}.json`);
+    const temp = `${target}.tmp`;
+    await writeFile(temp, JSON.stringify(checked.profile, null, 2), 'utf8');
+    await rename(temp, target);
+    profileList = await listProfiles(profilesDir, customProfilesDir);
+    const missing: string[] = [];
+    for (const name of checked.assets) {
+      if (!(await stat(path.join(assetsDir, name)).then(() => true, () => false))) missing.push(name);
+    }
+    log(`Design „${String(checked.profile.name)}“ importiert (${id}).`);
+    broadcast();
+    json(res, existing ? 200 : 201, { id, name: String(checked.profile.name), replaced: Boolean(existing), missingAssets: missing });
     return true;
   }
 
@@ -426,6 +527,7 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
       return send(res, 400, 'Ungültige Adresse', 'text/plain; charset=utf-8', head);
     }
     if (await handleData(req, res, pathname, search)) return;
+    if (await handleProfiles(req, res, pathname, search)) return;
     if (await handleRoster(req, res, pathname, search)) return;
     if (req.method !== 'GET' && !head) {
       return send(res, 405, 'Nur GET erlaubt', 'text/plain; charset=utf-8', false);
@@ -445,8 +547,12 @@ export async function startServer(options: ServerOptions = {}): Promise<RunningS
         return send(res, 404, 'Profil nicht gefunden', 'text/plain; charset=utf-8', head);
       }
       try {
-        const profile: unknown = JSON.parse(await readFile(path.join(profilesDir, `${id}.json`), 'utf8'));
-        return send(res, 200, JSON.stringify(profile), MIME['.json']!, head);
+        const entry = profileList.find((x) => x.id === id);
+        if (!entry) return send(res, 404, 'Profil nicht gefunden', 'text/plain; charset=utf-8', head);
+        const dir = entry.custom ? customProfilesDir : profilesDir;
+        const profile: unknown = JSON.parse(await readFile(path.join(dir, `${id}.json`), 'utf8'));
+        const extra = search.get('download') === '1' ? { 'Content-Disposition': `attachment; filename="seamcast-design-${id}.json"` } : undefined;
+        return send(res, 200, JSON.stringify(profile, null, extra ? 2 : undefined), MIME['.json']!, head, extra);
       } catch {
         return send(res, 404, 'Profil nicht gefunden', 'text/plain; charset=utf-8', head);
       }
